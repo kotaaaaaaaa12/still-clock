@@ -1,25 +1,30 @@
 'use strict';
 (() => {
   const fontNames = {sans:'Modern sans',serif:'Classic serif',mono:'Monospace',rounded:'Rounded',lmroman:'LM Roman',slanted:'LM Roman Slanted',demi:'LM Roman Demi',lmsans:'LM Sans',condensed:'LM Sans Condensed',lmmono:'LM Mono',lightmono:'LM Mono Light',dunhill:'LM Dunhill'};
-  const themeColors = {light:'#f2f3f1',dark:'#202224',midnight:'#101b2b',paper:'#eee7d8',black:'#050505',forest:'#142b23',plum:'#292035',ocean:'#e2f1f6',rose:'#f5e7ed',terminal:'#08100b',white:'#ffffff',lemon:'#ffe34d',tangerine:'#ffac35',bubblegum:'#ff8ac2',pool:'#39d5ed',lime:'#b6ee45',cobalt:'#76b7ff',coral:'#ff7666'};
-  const themeNames = {auto:'Match device',light:'Light',dark:'Dark',midnight:'Midnight',paper:'Paper',black:'Black',forest:'Forest',plum:'Plum',ocean:'Ocean',rose:'Rose',terminal:'Terminal',white:'White',lemon:'Lemon',tangerine:'Tangerine',bubblegum:'Bubblegum',pool:'Pool',lime:'Lime',cobalt:'Cobalt',coral:'Coral',custom:'Custom'};
-  const themePreviews = {light:['#f2f3f1','#25282a','#f8f9f6'],dark:['#202224','#eeefeb','#25292a'],midnight:['#101b2b','#dce8f6','#152235'],paper:['#eee7d8','#493f30','#f5f0e5'],black:['#050505','#f4f4f4','#0d0d0d'],forest:['#142b23','#d6efe1','#1b332a'],plum:['#292035','#eadef3','#30263b'],ocean:['#e2f1f6','#1e4a60','#edf7fa'],rose:['#f5e7ed','#543748','#fcf1f6'],terminal:['#08100b','#88dd99','#0d1a12'],white:['#ffffff','#202326','#ffffff'],lemon:['#ffe34d','#382d08','#fff4b8'],tangerine:['#ffac35','#422408','#ffe5bf'],bubblegum:['#ff8ac2','#4c1833','#ffe0ef'],pool:['#39d5ed','#053e4f','#d1f7fc'],lime:['#b6ee45','#293b0c','#e9facb'],cobalt:['#76b7ff','#102c57','#dfedff'],coral:['#ff7666','#481910','#ffded8']};
+  const themeColors = {light:'#f2f3f1',dark:'#202224',midnight:'#101b2b',paper:'#eee7d8',black:'#050505',forest:'#142b23',plum:'#292035',ocean:'#e2f1f6',rose:'#f5e7ed',terminal:'#08100b',white:'#ffffff',lemon:'#ffe34d',tangerine:'#ffac35',bubblegum:'#ff8ac2',pool:'#39d5ed',lime:'#b6ee45',cobalt:'#76b7ff',coral:'#ff7666',"mint":"#d9efe5","lavender":"#e8e0f5","peach":"#f7e0d0","sky":"#dce9f7","butter":"#f4edc9","cloud":"#e8eaf0","slate":"#252d38","navy":"#121a36","burgundy":"#341c29","espresso":"#28211d","charcoal":"#17191c","deepteal":"#102e32"};
+  const themeNames = {auto:'Match device',light:'Light',dark:'Dark',midnight:'Midnight',paper:'Paper',black:'Black',forest:'Forest',plum:'Plum',ocean:'Ocean',rose:'Rose',terminal:'Terminal',white:'White',lemon:'Lemon',tangerine:'Tangerine',bubblegum:'Bubblegum',pool:'Pool',lime:'Lime',cobalt:'Cobalt',coral:'Coral',custom:'Custom',"mint":"Mint","lavender":"Lavender","peach":"Peach","sky":"Sky","butter":"Butter","cloud":"Cloud","slate":"Slate","navy":"Navy","burgundy":"Burgundy","espresso":"Espresso","charcoal":"Charcoal","deepteal":"Deep teal"};
+  const themePreviews = {light:['#f2f3f1','#25282a','#f8f9f6'],dark:['#202224','#eeefeb','#25292a'],midnight:['#101b2b','#dce8f6','#152235'],paper:['#eee7d8','#493f30','#f5f0e5'],black:['#050505','#f4f4f4','#0d0d0d'],forest:['#142b23','#d6efe1','#1b332a'],plum:['#292035','#eadef3','#30263b'],ocean:['#e2f1f6','#1e4a60','#edf7fa'],rose:['#f5e7ed','#543748','#fcf1f6'],terminal:['#08100b','#88dd99','#0d1a12'],white:['#ffffff','#202326','#ffffff'],lemon:['#ffe34d','#382d08','#fff4b8'],tangerine:['#ffac35','#422408','#ffe5bf'],bubblegum:['#ff8ac2','#4c1833','#ffe0ef'],pool:['#39d5ed','#053e4f','#d1f7fc'],lime:['#b6ee45','#293b0c','#e9facb'],cobalt:['#76b7ff','#102c57','#dfedff'],coral:['#ff7666','#481910','#ffded8'],"mint":["#d9efe5", "#254a3b", "#edf9f2"],"lavender":["#e8e0f5", "#49355c", "#f7f2fc"],"peach":["#f7e0d0", "#603c2b", "#fff2e9"],"sky":["#dce9f7", "#2c465e", "#f0f6fd"],"butter":["#f4edc9", "#514922", "#fffae5"],"cloud":["#e8eaf0", "#3c4254", "#f6f7fb"],"slate":["#252d38", "#e6edf5", "#2e3845"],"navy":["#121a36", "#e4e9ff", "#1b264a"],"burgundy":["#341c29", "#f8e2ea", "#432535"],"espresso":["#28211d", "#efe4d6", "#352c25"],"charcoal":["#17191c", "#edf0f4", "#23262b"],"deepteal":["#102e32", "#dcf3ef", "#183e42"]};
   const colorSettings = ['accent','customBg','customInk','customDial','customSurface'];
   const customTokens = ['bg','ink','dial','surface','muted','line','subtle','shadow'];
-  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,dateWeekday:true,dateMonth:true,dateDay:true,dateYear:false,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
+  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,dateWeekday:true,dateMonth:true,dateDay:true,dateYear:false,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',hourPattern:'all',customHours:[12,3,6,9],numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
   const dateParts = {dateWeekday:['weekday','long'],dateMonth:['month','long'],dateDay:['day','numeric'],dateYear:['year','numeric']};
-  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),motion:['sweep','tick'],markers:['numbers','roman','minimal']};
+  const hourPatterns = {all:[12,1,2,3,4,5,6,7,8,9,10,11],quarters:[12,3,6,9],vertical:[12,6],horizontal:[3,9],top:[12],even:[12,2,4,6,8,10],odd:[1,3,5,7,9,11]};
+  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),motion:['sweep','tick'],markers:['numbers','roman','minimal'],hourPattern:['all','quarters','vertical','horizontal','top','even','odd','custom']};
   const storageKey = 'still-clock-settings-v1';
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
   const dialog = $('settingsDialog');
-  const zoneChoices = [...$('timezone').options].map(option => option.value);
+  const zoneOptions = [...$('timezone').options].filter(option => {
+    try { if (option.value !== 'local') new Intl.DateTimeFormat('en',{timeZone:option.value}); return true; }
+    catch (_) { option.remove(); return false; }
+  }).map(option=>({option,name:option.textContent,group:option.parentElement?.getAttribute('data-zone-group')}));
+  const zoneChoices = zoneOptions.map(({option})=>option.value);
   const media = matchMedia('(prefers-color-scheme: dark)');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let settings = {...defaults};
   let storageAvailable = true;
   let saveMessage = 'Changes save automatically';
-  let formatter, dateFormatter, captionFormatter;
+  let formatter, dateFormatter, zoneFormatter;
   let lastSecond = '';
   let lastDate = '';
   let focus = false;
@@ -54,15 +59,42 @@
     document.title = t('Still — Clock');
     description.content = t(originalDescription);
     syncActionLabels();
+    $('timezoneSearch').placeholder = t('Search cities or time zones');
+    filterTimezones();
     $('saveStatus').textContent = t(storageAvailable ? saveMessage : 'Saved for this session only');
   }
   function syncActionLabels() {
     const fullscreen = Boolean(document.fullscreenElement);
-    $('focusLabel').textContent = t('Clock only');
+    $('focusLabel').textContent = t('Focus Mode');
     $('fullscreenLabel').textContent = t(fullscreen?'Exit full screen':'Full screen');
-    $('focusButton').setAttribute('aria-label',t(focus?'Show controls':'Show only the clock'));
+    $('focusButton').setAttribute('aria-label',t(focus?'Exit focus mode':'Enter focus mode'));
     $('fullscreenButton').setAttribute('aria-label',t(fullscreen?'Exit full screen':'Enter full screen'));
-    $('exitFocus').textContent = t(fullscreen?'Exit full screen':'Show controls');
+    $('exitFocus').textContent = t(fullscreen?'Exit full screen':'Exit focus mode');
+  }
+  function filterTimezones() {
+    const normalize = text => text.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const query = normalize($('timezoneSearch').value || '').trim();
+    const groups = new Map();
+    const children = [];
+    let matches = 0;
+    for (const {option,name,group} of zoneOptions) {
+      const match = normalize(name+' '+option.textContent+' '+option.value).includes(query);
+      if (match && option.value !== 'local' && option.value !== 'UTC') matches++;
+      if (!match && option.value !== 'local' && option.value !== 'UTC' && option.value !== settings.timezone) continue;
+      if (!group) children.push(option);
+      else {
+        if (!groups.has(group)) {
+          const node = document.createElement('optgroup');
+          node.label = t(group);
+          groups.set(group,node); children.push(node);
+        }
+        groups.get(group).append(option);
+      }
+    }
+    $('timezone').replaceChildren(...children);
+    $('timezone').value = settings.timezone;
+    $('timezoneSearchStatus').hidden = !query || matches > 0;
+    $('timezoneSearchStatus').textContent = t('No matching cities');
   }
   function validate(patch) {
     if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('Settings must be an object.');
@@ -74,8 +106,9 @@
       if (key === 'scale' && (typeof value !== 'number' || value < 70 || value > 300 || value % 5 !== 0)) throw new Error('Clock size must be between 70 and 300 in increments of 5.');
       if (key === 'numeralSize' && (typeof value !== 'number' || value < 50 || value > 250 || value % 5 !== 0)) throw new Error('Numeral size must be between 50 and 250 in increments of 5.');
       if (key === 'timezone' && !zoneChoices.includes(value)) throw new Error('Unsupported time zone.');
+      if (key === 'customHours' && (!Array.isArray(value) || value.length > 12 || value.some(hour=>!Number.isInteger(hour) || hour < 1 || hour > 12) || new Set(value).size !== value.length)) throw new Error('Custom hours must be unique integers from 1 to 12.');
       if (colorSettings.includes(key) && (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value))) throw new Error('Colors must be six-digit hex values.');
-      result[key] = value;
+      result[key] = key === 'customHours' ? [...value] : value;
     }
     return result;
   }
@@ -101,7 +134,7 @@
     formatter = new Intl.DateTimeFormat('en-GB',{timeZone,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
     const selectedParts = Object.entries(dateParts).filter(([key])=>settings[key]);
     dateFormatter = selectedParts.length ? new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US',{timeZone,...Object.fromEntries(selectedParts.map(([,part])=>part))}) : null;
-    captionFormatter = new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US',{timeZone,timeZoneName:'short',hour:'numeric'});
+    zoneFormatter = new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US',{timeZone,timeZoneName:'short',hour:'numeric'});
     lastSecond = ''; lastDate = '';
   }
   function svgElement(tag,attributes) {
@@ -118,7 +151,9 @@
     }
     if (settings.markers !== 'minimal') {
       const roman = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+      const visible = settings.hourPattern === 'custom' ? settings.customHours : hourPatterns[settings.hourPattern];
       for (let i=0;i<12;i++) {
+        if (!visible.includes(i===0?12:i)) continue;
         const angle = i*Math.PI/6;
         const x = 200+148*Math.sin(angle);
         const y = 200-148*Math.cos(angle);
@@ -199,13 +234,15 @@
     $('clockMain').dataset.layout = settings.layout;
     $('dateLine').hidden = !settings.date || !Object.keys(dateParts).some(key=>settings[key]);
     $('dateParts').disabled = !settings.date;
-    $('timeCaption').hidden = !settings.zone;
     $('headerZone').hidden = !settings.zone;
     $('digitalSeconds').hidden = !settings.digitalSeconds;
     $('secondHand').style.display = settings.analogSeconds ? '' : 'none';
     $('scaleValue').value = settings.scale + '%';
     $('numeralSizeValue').value = settings.numeralSize + '%';
     $('numeralSize').disabled = settings.markers === 'minimal';
+    $('hourPattern').disabled = settings.markers === 'minimal';
+    $('customHourPicker').hidden = settings.markers === 'minimal' || settings.hourPattern !== 'custom';
+    document.querySelectorAll('[data-hour]').forEach(el=>el.setAttribute('aria-pressed',String(settings.customHours.includes(Number(el.dataset.hour)))));
     $('layout').disabled = settings.mode !== 'both';
     $('motion').disabled = !settings.analogSeconds;
     document.querySelectorAll('[data-setting]').forEach(el => {
@@ -222,7 +259,7 @@
   function updateSettings(patch) {
     settings = {...settings,...validate(patch)};
     applySettings(); save();
-    return {...settings};
+    return {...settings,customHours:[...settings.customHours]};
   }
   function fitClockLayout() {
     const main = $('clockMain');
@@ -241,18 +278,16 @@
     const digitalWidth = settings.mode === 'analog' ? 0 : digits.width;
     const digitalHeight = settings.mode === 'analog' ? 0 : digits.height;
     if (!analog && !digitalWidth) return;
-    const caption = settings.mode === 'analog' || $('timeCaption').hidden ? 0 : $('timeCaption').offsetHeight + px(getComputedStyle($('timeCaption')).marginTop);
-    const captionWidth = caption ? $('timeCaption').offsetWidth : 0;
     const pairStyle = getComputedStyle(pair);
     const side = pairStyle.flexDirection === 'row';
     const gap = settings.mode === 'both' ? px(pairStyle.gap) : 0;
     const dimensions = ratio => {
       const dial = analog * ratio;
       const digits = digitalWidth * ratio;
-      const digital = digitalHeight * ratio + caption;
+      const digital = digitalHeight * ratio;
       return side
-        ? {width:dial + Math.max(digits,captionWidth) + gap,height:Math.max(dial,digital)}
-        : {width:Math.max(dial,digits,captionWidth),height:dial + digital + gap};
+        ? {width:dial + digits + gap,height:Math.max(dial,digital)}
+        : {width:Math.max(dial,digits),height:dial + digital + gap};
     };
     let low = 0;
     let high = fullscreen || settings.scale === 300 ? Math.max(1,width / (analog || digitalWidth),height / (analog || digitalHeight)) : 1;
@@ -288,10 +323,9 @@
       $('digitalTime').classList.toggle('blink',settings.blink && second % 2 === 1 && !reducedMotion.matches);
       const dateText = dateFormatter?.format(now) ?? '';
       if (dateText !== lastDate || !dateFormatter) { $('dateLine').textContent = dateText; lastDate = dateText; }
-      const abbr = captionFormatter.formatToParts(now).find(part=>part.type==='timeZoneName').value;
-      const city = t(settings.timezone === 'local' ? 'Local time' : settings.timezone === 'UTC' ? 'UTC' : settings.timezone.split('/').pop().replaceAll('_',' '));
+      const abbr = zoneFormatter.formatToParts(now).find(part=>part.type==='timeZoneName').value;
+      const city = t(settings.timezone === 'local' ? 'Local time' : zoneOptions.find(({option})=>option.value===settings.timezone)?.name ?? settings.timezone.split('/').pop().replaceAll('_',' '));
       $('headerZone').textContent = `${city} · ${abbr}`;
-      $('timeCaption').textContent = `${city.toUpperCase()}${city==='UTC'?'':' / '+abbr}`;
       lastSecond = currentSecond;
       scheduleLayout();
     } else ({hour,minute,second} = tick.parts);
@@ -378,6 +412,12 @@
     });
   }
   $('settingsButton').addEventListener('click',openSettings);
+  document.querySelectorAll('[data-hour]').forEach(el=>el.addEventListener('click',()=>{
+    const hour = Number(el.dataset.hour);
+    const customHours = settings.customHours.includes(hour) ? settings.customHours.filter(value=>value!==hour) : [...settings.customHours,hour].sort((a,b)=>a-b);
+    updateSettings({customHours});
+  }));
+  $('timezoneSearch').addEventListener('input',filterTimezones);
   $('closeSettings').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
   $('resetButton').addEventListener('click',()=>$('resetDialog').showModal());
@@ -417,9 +457,9 @@
   if(!storageAvailable)$('saveStatus').textContent=t('Saved for this session only');
   if(document.modelContext?.registerTool) {
     const lifecycle = new AbortController();
-    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:colorSettings.includes(key)?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='scale'?{type:'number',minimum:70,maximum:300,multipleOf:5}:key==='numeralSize'?{type:'number',minimum:50,maximum:250,multipleOf:5}:{type:typeof value}]))};
+    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:colorSettings.includes(key)?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='customHours'?{type:'array',items:{type:'integer',minimum:1,maximum:12},maxItems:12,uniqueItems:true}:key==='scale'?{type:'number',minimum:70,maximum:300,multipleOf:5}:key==='numeralSize'?{type:'number',minimum:50,maximum:250,multipleOf:5}:{type:typeof value}]))};
     const tools = [
-      {name:'read_clock_settings',description:'Read the current clock display and appearance settings.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({...settings})},
+      {name:'read_clock_settings',description:'Read the current clock display and appearance settings.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({...settings,customHours:[...settings.customHours]})},
       {name:'configure_clock',description:'Update clock display and appearance settings. Changes appear immediately and save on this device.',inputSchema:schema,annotations:{readOnlyHint:false,untrustedContentHint:false},execute:input=>{const result=updateSettings(input);schedule();return result;}}
     ];
     for(const tool of tools){try{Promise.resolve(document.modelContext.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch(_){}}
