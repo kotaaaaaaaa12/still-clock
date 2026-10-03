@@ -1,7 +1,13 @@
 'use strict';
 (() => {
-  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,zone:true,scale:100,theme:'light',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
-  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto','light','dark','midnight','paper'],font:['sans','serif','mono','rounded'],dialFont:['sans','serif','mono','rounded'],motion:['sweep','tick'],markers:['numbers','roman','minimal']};
+  const fontNames = {sans:'Modern sans',serif:'Classic serif',mono:'Monospace',rounded:'Rounded',lmroman:'LM Roman',slanted:'LM Roman Slanted',demi:'LM Roman Demi',lmsans:'LM Sans',condensed:'LM Sans Condensed',lmmono:'LM Mono',lightmono:'LM Mono Light',dunhill:'LM Dunhill'};
+  const themeColors = {light:'#f2f3f1',dark:'#202224',midnight:'#101b2b',paper:'#eee7d8',black:'#050505',forest:'#142b23',plum:'#292035',ocean:'#e2f1f6',rose:'#f5e7ed',terminal:'#08100b',white:'#ffffff',lemon:'#ffe34d',tangerine:'#ffac35',bubblegum:'#ff8ac2',pool:'#39d5ed',lime:'#b6ee45',cobalt:'#76b7ff',coral:'#ff7666'};
+  const themeNames = {auto:'Match device',light:'Light',dark:'Dark',midnight:'Midnight',paper:'Paper',black:'Black',forest:'Forest',plum:'Plum',ocean:'Ocean',rose:'Rose',terminal:'Terminal',white:'White',lemon:'Lemon',tangerine:'Tangerine',bubblegum:'Bubblegum',pool:'Pool',lime:'Lime',cobalt:'Cobalt',coral:'Coral',custom:'Custom'};
+  const themePreviews = {light:['#f2f3f1','#25282a','#f8f9f6'],dark:['#202224','#eeefeb','#25292a'],midnight:['#101b2b','#dce8f6','#152235'],paper:['#eee7d8','#493f30','#f5f0e5'],black:['#050505','#f4f4f4','#0d0d0d'],forest:['#142b23','#d6efe1','#1b332a'],plum:['#292035','#eadef3','#30263b'],ocean:['#e2f1f6','#1e4a60','#edf7fa'],rose:['#f5e7ed','#543748','#fcf1f6'],terminal:['#08100b','#88dd99','#0d1a12'],white:['#ffffff','#202326','#ffffff'],lemon:['#ffe34d','#382d08','#fff4b8'],tangerine:['#ffac35','#422408','#ffe5bf'],bubblegum:['#ff8ac2','#4c1833','#ffe0ef'],pool:['#39d5ed','#053e4f','#d1f7fc'],lime:['#b6ee45','#293b0c','#e9facb'],cobalt:['#76b7ff','#102c57','#dfedff'],coral:['#ff7666','#481910','#ffded8']};
+  const colorSettings = ['accent','customBg','customInk','customDial','customSurface'];
+  const customTokens = ['bg','ink','dial','surface','muted','line','subtle','shadow'];
+  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
+  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),motion:['sweep','tick'],markers:['numbers','roman','minimal']};
   const storageKey = 'still-clock-settings-v1';
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
@@ -60,8 +66,9 @@
       if (choices[key] && !choices[key].includes(value)) throw new Error('Invalid value for ' + key);
       if (typeof defaults[key] === 'boolean' && typeof value !== 'boolean') throw new Error('Invalid value for ' + key);
       if (key === 'scale' && (typeof value !== 'number' || value < 70 || value > 130 || value % 5 !== 0)) throw new Error('Clock size must be between 70 and 130 in increments of 5.');
+      if (key === 'numeralSize' && (typeof value !== 'number' || value < 50 || value > 250 || value % 5 !== 0)) throw new Error('Numeral size must be between 50 and 250 in increments of 5.');
       if (key === 'timezone' && !zoneChoices.includes(value)) throw new Error('Unsupported time zone.');
-      if (key === 'accent' && (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value))) throw new Error('Accent color must be a six-digit hex color.');
+      if (colorSettings.includes(key) && (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value))) throw new Error('Colors must be six-digit hex values.');
       result[key] = value;
     }
     return result;
@@ -106,19 +113,81 @@
       const roman = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
       for (let i=0;i<12;i++) {
         const angle = i*Math.PI/6;
-        const el = svgElement('text',{x:200+148*Math.sin(angle),y:200-148*Math.cos(angle),class:'dial-number'+(settings.markers==='roman'?' roman':'')});
+        const x = 200+148*Math.sin(angle);
+        const y = 200-148*Math.cos(angle);
+        const el = svgElement('text',{x,y,class:'dial-number'+(settings.markers==='roman'?' roman':'')});
+        if (settings.markers === 'roman') el.setAttribute('transform',`rotate(${i*30} ${x} ${y})`);
         el.textContent = settings.markers==='roman'?roman[i]:(i===0?'12':String(i));
         $('numbers').append(el);
       }
     }
+    fitDialNumbers();
+  }
+  function fitDialNumbers() {
+    for (const el of $('numbers').children) {
+      if (typeof el.getComputedTextLength !== 'function') continue;
+      el.removeAttribute('textLength');
+      el.removeAttribute('lengthAdjust');
+      const maxWidth = settings.markers === 'roman' ? 68 : 72;
+      if (el.getComputedTextLength() > maxWidth) {
+        el.setAttribute('textLength',String(maxWidth));
+        el.setAttribute('lengthAdjust','spacingAndGlyphs');
+      }
+    }
+  }
+  function syncFontPickers() {
+    for (const key of ['font','dialFont']) {
+      const value = settings[key];
+      $(key+'Name').textContent = t(fontNames[value]);
+      $(key+'Summary').style.fontFamily = `var(--${value})`;
+    }
+    document.querySelectorAll('input[data-font-choice]').forEach(el => {
+      el.checked = settings[el.dataset.fontChoice] === el.value;
+    });
+  }
+  function mixColor(foreground,background,amount) {
+    const channels = hex => [1,3,5].map(index=>parseInt(hex.slice(index,index+2),16));
+    const front = channels(foreground), back = channels(background);
+    return '#'+front.map((value,index)=>Math.round(value*amount+back[index]*(1-amount)).toString(16).padStart(2,'0')).join('');
+  }
+  function isLightColor(hex) {
+    const channels = [1,3,5].map(index=>parseInt(hex.slice(index,index+2),16)/255).map(value=>value<=.04045?value/12.92:((value+.055)/1.055)**2.4);
+    return channels[0]*.2126+channels[1]*.7152+channels[2]*.0722>.35;
+  }
+  function applyTheme() {
+    for (const token of customTokens) root.style.removeProperty('--'+token);
+    root.style.removeProperty('color-scheme');
+    root.dataset.theme = settings.theme === 'auto' ? (media.matches?'dark':'light') : settings.theme;
+    if (settings.theme === 'custom') {
+      const light = isLightColor(settings.customBg);
+      const colors = {bg:settings.customBg,ink:settings.customInk,dial:settings.customDial,surface:settings.customSurface,muted:mixColor(settings.customInk,settings.customBg,.7),line:mixColor(settings.customInk,settings.customBg,.18),subtle:mixColor(settings.customInk,settings.customBg,.08),shadow:light?'0 15px 55px #00000012':'0 15px 55px #00000040'};
+      for (const [token,value] of Object.entries(colors)) root.style.setProperty('--'+token,value);
+      root.style.setProperty('color-scheme',light?'light':'dark');
+    }
+  }
+  function paintThemePreview(id,theme) {
+    const resolved = theme === 'auto' ? (media.matches?'dark':'light') : theme;
+    const colors = resolved === 'custom' ? [settings.customBg,settings.customInk,settings.customDial] : themePreviews[resolved];
+    for (const [index,token] of ['bg','ink','dial'].entries()) $(id).style.setProperty('--preview-'+token,colors[index]);
+  }
+  function syncThemePicker() {
+    $('themeName').textContent = t(themeNames[settings.theme]);
+    paintThemePreview('themeSummaryPreview',settings.theme);
+    paintThemePreview('autoThemePreview','auto');
+    paintThemePreview('customThemePreview','custom');
+    document.querySelectorAll('input[data-theme-choice]').forEach(el=>{el.checked = el.value === settings.theme;});
+    $('customThemePanel').hidden = settings.theme !== 'custom';
+    $('customizeTheme').disabled = settings.theme === 'custom';
+    for (const key of colorSettings.filter(key=>key!=='accent')) $(key+'Value').value = settings[key].toUpperCase();
   }
   function applySettings() {
     applyLanguage();
-    root.dataset.theme = settings.theme === 'auto' ? (media.matches?'dark':'light') : settings.theme;
+    applyTheme();
     root.style.setProperty('--accent',settings.accent);
     root.style.setProperty('--digital-font',`var(--${settings.font})`);
     root.style.setProperty('--dial-font',`var(--${settings.dialFont})`);
     root.style.setProperty('--clock-scale',String(settings.scale/100));
+    root.style.setProperty('--dial-scale',String(settings.numeralSize/100));
     $('clockMain').dataset.mode = settings.mode;
     $('clockMain').dataset.layout = settings.layout;
     $('dateLine').hidden = !settings.date;
@@ -127,6 +196,8 @@
     $('digitalSeconds').hidden = !settings.digitalSeconds;
     $('secondHand').style.display = settings.analogSeconds ? '' : 'none';
     $('scaleValue').value = settings.scale + '%';
+    $('numeralSizeValue').value = settings.numeralSize + '%';
+    $('numeralSize').disabled = settings.markers === 'minimal';
     $('layout').disabled = settings.mode !== 'both';
     $('motion').disabled = !settings.analogSeconds;
     document.querySelectorAll('[data-setting]').forEach(el => {
@@ -134,9 +205,10 @@
       if (el.type === 'checkbox') el.checked = value; else el.value = value;
     });
     document.querySelectorAll('[data-mode]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.mode===settings.mode)));
-    document.querySelectorAll('[data-theme]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.theme===settings.theme)));
     document.querySelectorAll('[data-accent]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.accent.toLowerCase()===settings.accent.toLowerCase())));
-    document.querySelector('meta[name="theme-color"]').content = {light:'#f2f3f1',dark:'#202224',midnight:'#101b2b',paper:'#eee7d8'}[root.dataset.theme];
+    syncFontPickers();
+    syncThemePicker();
+    document.querySelector('meta[name="theme-color"]').content = settings.theme === 'custom' ? settings.customBg : themeColors[root.dataset.theme];
     formatters(); drawDial(); tick();
   }
   function updateSettings(patch) {
@@ -208,8 +280,39 @@
     updateSettings({[el.dataset.setting]:value}); schedule();
   }));
   document.querySelectorAll('[data-mode]').forEach(el=>el.addEventListener('click',()=>{updateSettings({mode:el.dataset.mode});schedule();}));
-  document.querySelectorAll('[data-theme]').forEach(el=>el.addEventListener('click',()=>updateSettings({theme:el.dataset.theme})));
+  document.querySelectorAll('input[data-theme-choice]').forEach(el=>el.addEventListener('change',()=>{
+    if (!el.checked) return;
+    updateSettings({theme:el.value});
+    $('themePicker').open = false;
+    $('themeSummary').focus({preventScroll:true});
+  }));
+  $('customizeTheme').addEventListener('click',()=>{
+    const colors = getComputedStyle(root);
+    const patch = {theme:'custom'};
+    for (const [key,token] of Object.entries({customBg:'bg',customInk:'ink',customDial:'dial',customSurface:'surface'})) patch[key] = colors.getPropertyValue('--'+token).trim();
+    updateSettings(patch);
+  });
   document.querySelectorAll('[data-accent]').forEach(el=>el.addEventListener('click',()=>updateSettings({accent:el.dataset.accent})));
+  document.querySelectorAll('input[data-font-choice]').forEach(el => el.addEventListener('change',() => {
+    if (!el.checked) return;
+    const key = el.dataset.fontChoice;
+    updateSettings({[key]:el.value});
+    $(key+'Picker').open = false;
+    $(key+'Summary').focus({preventScroll:true});
+    schedule();
+  }));
+  for (const key of ['theme','font','dialFont']) {
+    $(key+'Picker').addEventListener('toggle',() => {
+      if ($(key+'Picker').open) for (const other of ['theme','font','dialFont']) if (other !== key) $(other+'Picker').open = false;
+    });
+    $(key+'Picker').addEventListener('keydown',event => {
+      if (event.key === 'Escape' && $(key+'Picker').open) {
+        event.preventDefault();event.stopPropagation();
+        $(key+'Picker').open = false;
+        $(key+'Summary').focus({preventScroll:true});
+      }
+    });
+  }
   $('settingsButton').addEventListener('click',openSettings);
   $('footerSettings').addEventListener('click',openSettings);
   $('closeSettings').addEventListener('click',()=>dialog.close());
@@ -237,10 +340,14 @@
   window.addEventListener('languagechange',()=>{if(settings.language==='auto'){applySettings();schedule();}});
   window.addEventListener('storage',event=>{if(event.key===storageKey){try{settings=event.newValue?{...defaults,...validate(JSON.parse(event.newValue))}:{...defaults};applySettings();schedule();}catch(_){}}});
   applySettings(); schedule();
+  if (document.fonts) {
+    document.fonts.ready.then(fitDialNumbers).catch(()=>{});
+    document.fonts.addEventListener('loadingdone',fitDialNumbers);
+  }
   if(!storageAvailable)$('saveStatus').textContent=t('Saved for this session only');
   if(document.modelContext?.registerTool) {
     const lifecycle = new AbortController();
-    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:key==='accent'?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='scale'?{type:'number',minimum:70,maximum:130,multipleOf:5}:{type:typeof value}]))};
+    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:colorSettings.includes(key)?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='scale'?{type:'number',minimum:70,maximum:130,multipleOf:5}:key==='numeralSize'?{type:'number',minimum:50,maximum:250,multipleOf:5}:{type:typeof value}]))};
     const tools = [
       {name:'read_clock_settings',description:'Read the current clock display and appearance settings.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({...settings})},
       {name:'configure_clock',description:'Update clock display and appearance settings. Changes appear immediately and save on this device.',inputSchema:schema,annotations:{readOnlyHint:false,untrustedContentHint:false},execute:input=>{const result=updateSettings(input);schedule();return result;}}
