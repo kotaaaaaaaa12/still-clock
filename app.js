@@ -106,7 +106,7 @@
       if (!Object.hasOwn(defaults,key)) throw new Error('Unknown setting: ' + key);
       if (choices[key] && !choices[key].includes(value)) throw new Error('Invalid value for ' + key);
       if (typeof defaults[key] === 'boolean' && typeof value !== 'boolean') throw new Error('Invalid value for ' + key);
-      if (key === 'scale' && (typeof value !== 'number' || value < 70 || value > 300 || value % 5 !== 0)) throw new Error('Clock size must be between 70 and 300 in increments of 5.');
+      if (key === 'scale' && (typeof value !== 'number' || value < 70 || value > 130 || value % 5 !== 0)) throw new Error('Clock size must be between 70 and 130 in increments of 5.');
       if (key === 'numeralSize' && (typeof value !== 'number' || value < 50 || value > 250 || value % 5 !== 0)) throw new Error('Numeral size must be between 50 and 250 in increments of 5.');
       if (key === 'timezone' && !zoneChoices.includes(value)) throw new Error('Unsupported time zone.');
       if (key === 'customHours' && (!Array.isArray(value) || value.length > 12 || value.some(hour=>!Number.isInteger(hour) || hour < 1 || hour > 12) || new Set(value).size !== value.length)) throw new Error('Custom hours must be unique integers from 1 to 12.');
@@ -115,9 +115,15 @@
     }
     return result;
   }
+  function settingsFromStorage(saved) {
+    const parsed = JSON.parse(saved);
+    // Keep older saved settings when their clock size exceeds the new range.
+    if (parsed && typeof parsed.scale === 'number' && parsed.scale > 130 && parsed.scale <= 300 && parsed.scale % 5 === 0) parsed.scale = 130;
+    return {...defaults,...validate(parsed)};
+  }
   try {
     const saved = localStorage.getItem(storageKey);
-    if (saved) settings = {...defaults,...validate(JSON.parse(saved))};
+    if (saved) settings = settingsFromStorage(saved);
   } catch (_) { storageAvailable = false; }
   function save() {
     try { localStorage.setItem(storageKey,JSON.stringify(settings)); storageAvailable = true; }
@@ -268,8 +274,6 @@
     const main = $('clockMain');
     const pair = $('clockPair');
     const stage = $('clockStage');
-    const fullscreen = Boolean(document.fullscreenElement);
-    if (focus && !fullscreen) root.style.setProperty('--focus-bottom-space',($('exitFocus').offsetHeight + 40)+'px');
     const style = getComputedStyle(main);
     const px = value => parseFloat(value) || 0;
     const dateSpace = $('dateLine').hidden ? 0 : $('dateLine').offsetHeight + px(getComputedStyle($('dateLine')).marginBottom);
@@ -293,13 +297,15 @@
         : {width:Math.max(dial,digits),height:dial + digital + gap};
     };
     let low = 0;
-    let high = fullscreen || settings.scale === 300 ? Math.max(1,width / (analog || digitalWidth),height / (analog || digitalHeight)) : 1;
+    let high = Math.max(1,width / (analog || digitalWidth),height / (analog || digitalHeight));
     for (let i=0;i<24;i++) {
       const ratio = (low + high) / 2;
       const size = dimensions(ratio);
       if (size.width <= width && size.height <= height) low = ratio; else high = ratio;
     }
-    root.style.setProperty('--clock-fit',String(low * (fullscreen ? Math.min(1,settings.scale / 100) : 1)));
+    // Reserve enough room for a modest enlargement above the default size.
+    const sizeFraction = settings.scale / 130;
+    root.style.setProperty('--clock-fit',String(low * sizeFraction));
     const fitted = pair.getBoundingClientRect();
     stage.style.width = fitted.width+'px';
     stage.style.height = fitted.height+'px';
@@ -450,7 +456,7 @@
     const layoutObserver = new ResizeObserver(scheduleLayout);
     for (const id of ['clockMain','dateLine','exitFocus']) layoutObserver.observe($(id));
   }
-  window.addEventListener('storage',event=>{if(event.key===storageKey){try{settings=event.newValue?{...defaults,...validate(JSON.parse(event.newValue))}:{...defaults};applySettings();schedule();}catch(_){}}});
+  window.addEventListener('storage',event=>{if(event.key===storageKey){try{settings=event.newValue?settingsFromStorage(event.newValue):{...defaults};applySettings();schedule();}catch(_){}}});
   applySettings(); schedule();
   if (document.fonts) {
     const fontsReady = () => { fitDialNumbers(); scheduleLayout(); };
@@ -460,7 +466,7 @@
   if(!storageAvailable)$('saveStatus').textContent=t('Saved for this session only');
   if(document.modelContext?.registerTool) {
     const lifecycle = new AbortController();
-    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:colorSettings.includes(key)?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='customHours'?{type:'array',items:{type:'integer',minimum:1,maximum:12},maxItems:12,uniqueItems:true}:key==='scale'?{type:'number',minimum:70,maximum:300,multipleOf:5}:key==='numeralSize'?{type:'number',minimum:50,maximum:250,multipleOf:5}:{type:typeof value}]))};
+    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:colorSettings.includes(key)?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='customHours'?{type:'array',items:{type:'integer',minimum:1,maximum:12},maxItems:12,uniqueItems:true}:key==='scale'?{type:'number',minimum:70,maximum:130,multipleOf:5}:key==='numeralSize'?{type:'number',minimum:50,maximum:250,multipleOf:5}:{type:typeof value}]))};
     const tools = [
       {name:'read_clock_settings',description:'Read the current clock display and appearance settings.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({...settings,customHours:[...settings.customHours]})},
       {name:'configure_clock',description:'Update clock display and appearance settings. Changes appear immediately and save on this device.',inputSchema:schema,annotations:{readOnlyHint:false,untrustedContentHint:false},execute:input=>{const result=updateSettings(input);schedule();return result;}}
