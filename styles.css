@@ -62,3 +62,5 @@ body.focus-mode #clockMain{--analog-base:400px}
 @media(max-height:700px) and (min-width:851px){#clockMain{--analog-base:260px;--digital-base:64px;--clock-gap:20px}#clockMain[data-mode=analog]{--analog-base:360px}}
 
 .date-parts{border:0;padding:0;margin:0}.date-parts:disabled{opacity:.45}.date-parts:disabled .toggle-row,.date-parts:disabled input{cursor:default}
+
+body.fullscreen-mode #clockMain{padding-top:12px;padding-left:12px;padding-right:12px}body.fullscreen-mode .date-line{margin-bottom:20px}

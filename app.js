@@ -228,6 +228,7 @@
     const main = $('clockMain');
     const pair = $('clockPair');
     const stage = $('clockStage');
+    const fullscreen = Boolean(document.fullscreenElement);
     if (focus) root.style.setProperty('--focus-bottom-space',($('exitFocus').offsetHeight + 40)+'px');
     const style = getComputedStyle(main);
     const px = value => parseFloat(value) || 0;
@@ -254,13 +255,13 @@
         : {width:Math.max(dial,digits,captionWidth),height:dial + digital + gap};
     };
     let low = 0;
-    let high = settings.scale === 300 ? Math.max(1,width / (analog || digitalWidth),height / (analog || digitalHeight)) : 1;
+    let high = fullscreen || settings.scale === 300 ? Math.max(1,width / (analog || digitalWidth),height / (analog || digitalHeight)) : 1;
     for (let i=0;i<24;i++) {
       const ratio = (low + high) / 2;
       const size = dimensions(ratio);
       if (size.width <= width && size.height <= height) low = ratio; else high = ratio;
     }
-    root.style.setProperty('--clock-fit',String(low));
+    root.style.setProperty('--clock-fit',String(low * (fullscreen ? Math.min(1,settings.scale / 100) : 1)));
     const fitted = pair.getBoundingClientRect();
     stage.style.width = fitted.width+'px';
     stage.style.height = fitted.height+'px';
@@ -316,6 +317,7 @@
   }
   function setFocus(value) {
     focus = value; document.body.classList.toggle('focus-mode',focus);
+    document.body.classList.toggle('fullscreen-mode',Boolean(document.fullscreenElement));
     $('exitFocus').hidden = !focus;
     $('focusButton').setAttribute('aria-pressed',String(focus));
     syncActionLabels();
