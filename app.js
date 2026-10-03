@@ -6,7 +6,8 @@
   const themePreviews = {light:['#f2f3f1','#25282a','#f8f9f6'],dark:['#202224','#eeefeb','#25292a'],midnight:['#101b2b','#dce8f6','#152235'],paper:['#eee7d8','#493f30','#f5f0e5'],black:['#050505','#f4f4f4','#0d0d0d'],forest:['#142b23','#d6efe1','#1b332a'],plum:['#292035','#eadef3','#30263b'],ocean:['#e2f1f6','#1e4a60','#edf7fa'],rose:['#f5e7ed','#543748','#fcf1f6'],terminal:['#08100b','#88dd99','#0d1a12'],white:['#ffffff','#202326','#ffffff'],lemon:['#ffe34d','#382d08','#fff4b8'],tangerine:['#ffac35','#422408','#ffe5bf'],bubblegum:['#ff8ac2','#4c1833','#ffe0ef'],pool:['#39d5ed','#053e4f','#d1f7fc'],lime:['#b6ee45','#293b0c','#e9facb'],cobalt:['#76b7ff','#102c57','#dfedff'],coral:['#ff7666','#481910','#ffded8']};
   const colorSettings = ['accent','customBg','customInk','customDial','customSurface'];
   const customTokens = ['bg','ink','dial','surface','muted','line','subtle','shadow'];
-  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
+  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,dateWeekday:true,dateMonth:true,dateDay:true,dateYear:false,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
+  const dateParts = {dateWeekday:['weekday','long'],dateMonth:['month','long'],dateDay:['day','numeric'],dateYear:['year','numeric']};
   const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),motion:['sweep','tick'],markers:['numbers','roman','minimal']};
   const storageKey = 'still-clock-settings-v1';
   const $ = id => document.getElementById(id);
@@ -98,7 +99,8 @@
   function formatters() {
     const timeZone = zone();
     formatter = new Intl.DateTimeFormat('en-GB',{timeZone,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
-    dateFormatter = new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US',{timeZone,weekday:'long',month:'long',day:'numeric'});
+    const selectedParts = Object.entries(dateParts).filter(([key])=>settings[key]);
+    dateFormatter = selectedParts.length ? new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US',{timeZone,...Object.fromEntries(selectedParts.map(([,part])=>part))}) : null;
     captionFormatter = new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US',{timeZone,timeZoneName:'short',hour:'numeric'});
     lastSecond = ''; lastDate = '';
   }
@@ -195,7 +197,8 @@
     root.style.setProperty('--dial-scale',String(settings.numeralSize/100));
     $('clockMain').dataset.mode = settings.mode;
     $('clockMain').dataset.layout = settings.layout;
-    $('dateLine').hidden = !settings.date;
+    $('dateLine').hidden = !settings.date || !Object.keys(dateParts).some(key=>settings[key]);
+    $('dateParts').disabled = !settings.date;
     $('timeCaption').hidden = !settings.zone;
     $('headerZone').hidden = !settings.zone;
     $('digitalSeconds').hidden = !settings.digitalSeconds;
@@ -282,8 +285,8 @@
       $('digitalTime').setAttribute('aria-label',`${t('Digital clock')}, ${displayHour}:${parts.minute}${settings.digitalSeconds?':'+parts.second:''}${settings.format==='12'?' '+t(hour<12?'AM':'PM'):''}`);
       $('analogClock').setAttribute('aria-label',`${t('Analog clock')}, ${parts.hour}:${parts.minute}${settings.analogSeconds?':'+parts.second:''}`);
       $('digitalTime').classList.toggle('blink',settings.blink && second % 2 === 1 && !reducedMotion.matches);
-      const dateText = dateFormatter.format(now);
-      if (dateText !== lastDate) { $('dateLine').textContent = dateText; lastDate = dateText; }
+      const dateText = dateFormatter?.format(now) ?? '';
+      if (dateText !== lastDate || !dateFormatter) { $('dateLine').textContent = dateText; lastDate = dateText; }
       const abbr = captionFormatter.formatToParts(now).find(part=>part.type==='timeZoneName').value;
       const city = t(settings.timezone === 'local' ? 'Local time' : settings.timezone === 'UTC' ? 'UTC' : settings.timezone.split('/').pop().replaceAll('_',' '));
       $('headerZone').textContent = `${city} · ${abbr}`;
@@ -373,7 +376,6 @@
     });
   }
   $('settingsButton').addEventListener('click',openSettings);
-  $('footerSettings').addEventListener('click',openSettings);
   $('closeSettings').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
   $('resetButton').addEventListener('click',()=>$('resetDialog').showModal());
