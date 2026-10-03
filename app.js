@@ -177,13 +177,24 @@
   }
   function fitDialNumbers() {
     for (const el of $('numbers').children) {
-      if (typeof el.getComputedTextLength !== 'function') continue;
+      el.removeAttribute('dx');
+      el.removeAttribute('dy');
       el.removeAttribute('textLength');
       el.removeAttribute('lengthAdjust');
       const maxWidth = settings.markers === 'roman' ? 68 : 72;
-      if (el.getComputedTextLength() > maxWidth) {
+      if (typeof el.getComputedTextLength === 'function' && el.getComputedTextLength() > maxWidth) {
         el.setAttribute('textLength',String(maxWidth));
         el.setAttribute('lengthAdjust','spacingAndGlyphs');
+      }
+      // Center the measured text bounds at the marker's original dial position.
+      if (typeof el.getBBox !== 'function') continue;
+      try {
+        const box = el.getBBox();
+        if (box.width <= 0 || box.height <= 0 || ![box.x,box.y,box.width,box.height].every(Number.isFinite)) continue;
+        el.setAttribute('dx',String(Number(el.getAttribute('x')) - box.x - box.width / 2));
+        el.setAttribute('dy',String(Number(el.getAttribute('y')) - box.y - box.height / 2));
+      } catch (_) {
+        // Hidden SVG text may not have measurable bounds yet.
       }
     }
   }
