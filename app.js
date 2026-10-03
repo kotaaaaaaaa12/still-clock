@@ -23,6 +23,7 @@
   let lastDate = '';
   let focus = false;
   let idleTimer, toastTimer;
+  let layoutFrame;
   let timer;
   let locale = 'en';
   const translations = window.StillLocale.ja;
@@ -69,7 +70,7 @@
       if (!Object.hasOwn(defaults,key)) throw new Error('Unknown setting: ' + key);
       if (choices[key] && !choices[key].includes(value)) throw new Error('Invalid value for ' + key);
       if (typeof defaults[key] === 'boolean' && typeof value !== 'boolean') throw new Error('Invalid value for ' + key);
-      if (key === 'scale' && (typeof value !== 'number' || value < 70 || value > 130 || value % 5 !== 0)) throw new Error('Clock size must be between 70 and 130 in increments of 5.');
+      if (key === 'scale' && (typeof value !== 'number' || value < 70 || value > 300 || value % 5 !== 0)) throw new Error('Clock size must be between 70 and 300 in increments of 5.');
       if (key === 'numeralSize' && (typeof value !== 'number' || value < 50 || value > 250 || value % 5 !== 0)) throw new Error('Numeral size must be between 50 and 250 in increments of 5.');
       if (key === 'timezone' && !zoneChoices.includes(value)) throw new Error('Unsupported time zone.');
       if (colorSettings.includes(key) && (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value))) throw new Error('Colors must be six-digit hex values.');
@@ -220,6 +221,51 @@
     applySettings(); save();
     return {...settings};
   }
+  function fitClockLayout() {
+    const main = $('clockMain');
+    const pair = $('clockPair');
+    const stage = $('clockStage');
+    if (focus) root.style.setProperty('--focus-bottom-space',($('exitFocus').offsetHeight + 40)+'px');
+    const style = getComputedStyle(main);
+    const px = value => parseFloat(value) || 0;
+    const dateSpace = $('dateLine').hidden ? 0 : $('dateLine').offsetHeight + px(getComputedStyle($('dateLine')).marginBottom);
+    const width = Math.max(0,main.clientWidth - px(style.paddingLeft) - px(style.paddingRight) - 1);
+    const height = Math.max(0,main.clientHeight - px(style.paddingTop) - px(style.paddingBottom) - dateSpace - 1);
+    root.style.setProperty('--clock-fit','1');
+    const analog = settings.mode === 'digital' ? 0 : $('analogWrap').getBoundingClientRect().width;
+    const digits = $('digitalTime').getBoundingClientRect();
+    const digitalWidth = settings.mode === 'analog' ? 0 : digits.width;
+    const digitalHeight = settings.mode === 'analog' ? 0 : digits.height;
+    if (!analog && !digitalWidth) return;
+    const caption = settings.mode === 'analog' || $('timeCaption').hidden ? 0 : $('timeCaption').offsetHeight + px(getComputedStyle($('timeCaption')).marginTop);
+    const captionWidth = caption ? $('timeCaption').offsetWidth : 0;
+    const pairStyle = getComputedStyle(pair);
+    const side = pairStyle.flexDirection === 'row';
+    const gap = settings.mode === 'both' ? px(pairStyle.gap) : 0;
+    const dimensions = ratio => {
+      const dial = analog * ratio;
+      const digits = digitalWidth * ratio;
+      const digital = digitalHeight * ratio + caption;
+      return side
+        ? {width:dial + Math.max(digits,captionWidth) + gap,height:Math.max(dial,digital)}
+        : {width:Math.max(dial,digits,captionWidth),height:dial + digital + gap};
+    };
+    let low = 0;
+    let high = settings.scale === 300 ? Math.max(1,width / (analog || digitalWidth),height / (analog || digitalHeight)) : 1;
+    for (let i=0;i<24;i++) {
+      const ratio = (low + high) / 2;
+      const size = dimensions(ratio);
+      if (size.width <= width && size.height <= height) low = ratio; else high = ratio;
+    }
+    root.style.setProperty('--clock-fit',String(low));
+    const fitted = pair.getBoundingClientRect();
+    stage.style.width = fitted.width+'px';
+    stage.style.height = fitted.height+'px';
+  }
+  function scheduleLayout() {
+    if (layoutFrame) return;
+    layoutFrame = requestAnimationFrame(() => { layoutFrame = null; fitClockLayout(); });
+  }
   function tick() {
     const now = new Date();
     const currentSecond = Math.floor(now.getTime()/1000);
@@ -243,6 +289,7 @@
       $('headerZone').textContent = `${city} · ${abbr}`;
       $('timeCaption').textContent = `${city.toUpperCase()}${city==='UTC'?'':' / '+abbr}`;
       lastSecond = currentSecond;
+      scheduleLayout();
     } else ({hour,minute,second} = tick.parts);
     const sweep = settings.motion === 'sweep';
     const preciseSecond = second + (sweep ? now.getMilliseconds()/1000 : 0);
@@ -269,6 +316,7 @@
     $('exitFocus').hidden = !focus;
     $('focusButton').setAttribute('aria-pressed',String(focus));
     syncActionLabels();
+    scheduleLayout();
     revealFocus();
     if (!focus) $('focusButton').focus({preventScroll:true});
   }
@@ -349,16 +397,23 @@
   media.addEventListener('change',()=>{if(settings.theme==='auto')applySettings();});
   reducedMotion.addEventListener('change',()=>{lastSecond='';schedule();});
   window.addEventListener('languagechange',()=>{if(settings.language==='auto'){applySettings();schedule();}});
+  window.addEventListener('resize',scheduleLayout,{passive:true});
+  window.visualViewport?.addEventListener('resize',scheduleLayout,{passive:true});
+  if (typeof ResizeObserver !== 'undefined') {
+    const layoutObserver = new ResizeObserver(scheduleLayout);
+    for (const id of ['clockMain','dateLine','exitFocus']) layoutObserver.observe($(id));
+  }
   window.addEventListener('storage',event=>{if(event.key===storageKey){try{settings=event.newValue?{...defaults,...validate(JSON.parse(event.newValue))}:{...defaults};applySettings();schedule();}catch(_){}}});
   applySettings(); schedule();
   if (document.fonts) {
-    document.fonts.ready.then(fitDialNumbers).catch(()=>{});
-    document.fonts.addEventListener('loadingdone',fitDialNumbers);
+    const fontsReady = () => { fitDialNumbers(); scheduleLayout(); };
+    document.fonts.ready.then(fontsReady).catch(()=>{});
+    document.fonts.addEventListener('loadingdone',fontsReady);
   }
   if(!storageAvailable)$('saveStatus').textContent=t('Saved for this session only');
   if(document.modelContext?.registerTool) {
     const lifecycle = new AbortController();
-    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:colorSettings.includes(key)?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='scale'?{type:'number',minimum:70,maximum:130,multipleOf:5}:key==='numeralSize'?{type:'number',minimum:50,maximum:250,multipleOf:5}:{type:typeof value}]))};
+    const schema = {type:'object',additionalProperties:false,properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,choices[key]?{type:'string',enum:choices[key]}:key==='timezone'?{type:'string',enum:zoneChoices}:colorSettings.includes(key)?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:key==='scale'?{type:'number',minimum:70,maximum:300,multipleOf:5}:key==='numeralSize'?{type:'number',minimum:50,maximum:250,multipleOf:5}:{type:typeof value}]))};
     const tools = [
       {name:'read_clock_settings',description:'Read the current clock display and appearance settings.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({...settings})},
       {name:'configure_clock',description:'Update clock display and appearance settings. Changes appear immediately and save on this device.',inputSchema:schema,annotations:{readOnlyHint:false,untrustedContentHint:false},execute:input=>{const result=updateSettings(input);schedule();return result;}}
