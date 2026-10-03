@@ -13,6 +13,7 @@
   const storageKey = 'still-clock-settings-v1';
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
+  root.dataset.inputMethod = 'pointer';
   const dialog = $('settingsDialog');
   const zoneOptions = [...$('timezone').options].filter(option => {
     try { if (option.value !== 'local') new Intl.DateTimeFormat('en',{timeZone:option.value}); return true; }
@@ -351,7 +352,12 @@
     const smooth = settings.mode !== 'digital' && settings.analogSeconds && settings.motion === 'sweep';
     timer = setTimeout(schedule,smooth?16:Math.max(16,1000-Date.now()%1000));
   }
-  function openSettings() { if (!dialog.open) dialog.showModal(); }
+  function openDialog(panel,title) {
+    if (panel.open) return;
+    panel.showModal();
+    title.focus({preventScroll:true});
+  }
+  function openSettings() { openDialog(dialog,$('settingsTitle')); }
   function revealFocus() {
     if (!focus) return;
     $('exitFocus').classList.remove('is-idle');
@@ -429,7 +435,7 @@
   $('timezoneSearch').addEventListener('input',filterTimezones);
   $('closeSettings').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
-  $('resetButton').addEventListener('click',()=>$('resetDialog').showModal());
+  $('resetButton').addEventListener('click',()=>openDialog($('resetDialog'),$('resetTitle')));
   $('cancelReset').addEventListener('click',()=>$('resetDialog').close());
   $('confirmReset').addEventListener('click',()=>{settings={...defaults};applySettings();save();schedule();$('resetDialog').close();});
   $('focusButton').addEventListener('click',()=>setFocus(!focus));
@@ -438,8 +444,9 @@
   $('fullscreenButton').addEventListener('click',fullScreen);
   document.addEventListener('fullscreenchange',()=>setFocus(Boolean(document.fullscreenElement)));
   document.addEventListener('pointermove',revealFocus,{passive:true});
-  document.addEventListener('pointerdown',revealFocus,{passive:true});
+  document.addEventListener('pointerdown',()=>{root.dataset.inputMethod='pointer';revealFocus();},{passive:true});
   document.addEventListener('keydown',event=>{
+    if (event.key === 'Tab' || event.key.startsWith('Arrow')) root.dataset.inputMethod='keyboard';
     revealFocus();
     if (event.key === 'Escape' && focus && !document.fullscreenElement && !dialog.open && !$('resetDialog').open) setFocus(false);
     if (event.ctrlKey||event.metaKey||event.altKey||event.repeat||dialog.open||$('resetDialog').open||/INPUT|SELECT|TEXTAREA/.test(event.target.tagName)) return;
