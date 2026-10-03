@@ -69,7 +69,10 @@
     $('fullscreenLabel').textContent = t(fullscreen?'Exit full screen':'Full screen');
     $('focusButton').setAttribute('aria-label',t(focus?'Exit focus mode':'Enter focus mode'));
     $('fullscreenButton').setAttribute('aria-label',t(fullscreen?'Exit full screen':'Enter full screen'));
-    $('exitFocus').textContent = t(fullscreen?'Exit full screen':'Exit focus mode');
+    const exitLabel = t(fullscreen?'Exit full screen':'Exit focus mode');
+    $('exitFocusLabel').textContent = exitLabel;
+    $('exitFocus').setAttribute('aria-label',exitLabel);
+    $('exitFocus').setAttribute('title',exitLabel);
   }
   function filterTimezones() {
     const normalize = text => text.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -266,7 +269,7 @@
     const pair = $('clockPair');
     const stage = $('clockStage');
     const fullscreen = Boolean(document.fullscreenElement);
-    if (focus) root.style.setProperty('--focus-bottom-space',($('exitFocus').offsetHeight + 40)+'px');
+    if (focus && !fullscreen) root.style.setProperty('--focus-bottom-space',($('exitFocus').offsetHeight + 40)+'px');
     const style = getComputedStyle(main);
     const px = value => parseFloat(value) || 0;
     const dateSpace = $('dateLine').hidden ? 0 : $('dateLine').offsetHeight + px(getComputedStyle($('dateLine')).marginBottom);
