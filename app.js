@@ -55,8 +55,12 @@
     $('saveStatus').textContent = t(storageAvailable ? saveMessage : 'Saved for this session only');
   }
   function syncActionLabels() {
-    $('focusButton').setAttribute('aria-label',t(focus?'Exit focus mode':'Enter focus mode'));
-    $('fullscreenButton').setAttribute('aria-label',t(document.fullscreenElement?'Exit full screen':'Enter full screen'));
+    const fullscreen = Boolean(document.fullscreenElement);
+    $('focusLabel').textContent = t('Clock only');
+    $('fullscreenLabel').textContent = t(fullscreen?'Exit full screen':'Full screen');
+    $('focusButton').setAttribute('aria-label',t(focus?'Show controls':'Show only the clock'));
+    $('fullscreenButton').setAttribute('aria-label',t(fullscreen?'Exit full screen':'Enter full screen'));
+    $('exitFocus').textContent = t(fullscreen?'Exit full screen':'Show controls');
   }
   function validate(patch) {
     if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('Settings must be an object.');
@@ -269,11 +273,18 @@
     if (!focus) $('focusButton').focus({preventScroll:true});
   }
   async function fullScreen() {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
     try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else if (root.requestFullscreen) await root.requestFullscreen();
+      if (root.requestFullscreen) { await root.requestFullscreen(); setFocus(true); }
       else { setFocus(true); toast(t('Full screen is unavailable. Focus mode is on.')); }
     } catch (_) { setFocus(true); toast(t('Full screen is unavailable. Focus mode is on.')); }
+  }
+  function exitClockView() {
+    if (document.fullscreenElement) return fullScreen();
+    setFocus(false);
   }
   document.querySelectorAll('[data-setting]').forEach(el => el.addEventListener(el.type==='range'||el.type==='color'?'input':'change',() => {
     const value = el.type==='checkbox'?el.checked:el.type==='range'?Number(el.value):el.value;
@@ -321,15 +332,15 @@
   $('cancelReset').addEventListener('click',()=>$('resetDialog').close());
   $('confirmReset').addEventListener('click',()=>{settings={...defaults};applySettings();save();schedule();$('resetDialog').close();});
   $('focusButton').addEventListener('click',()=>setFocus(!focus));
-  $('exitFocus').addEventListener('click',()=>setFocus(false));
+  $('exitFocus').addEventListener('click',exitClockView);
   $('exitFocus').addEventListener('focus',revealFocus);
   $('fullscreenButton').addEventListener('click',fullScreen);
-  document.addEventListener('fullscreenchange',syncActionLabels);
+  document.addEventListener('fullscreenchange',()=>setFocus(Boolean(document.fullscreenElement)));
   document.addEventListener('pointermove',revealFocus,{passive:true});
   document.addEventListener('pointerdown',revealFocus,{passive:true});
   document.addEventListener('keydown',event=>{
     revealFocus();
-    if (event.key === 'Escape' && focus && !dialog.open && !$('resetDialog').open) setFocus(false);
+    if (event.key === 'Escape' && focus && !document.fullscreenElement && !dialog.open && !$('resetDialog').open) setFocus(false);
     if (event.ctrlKey||event.metaKey||event.altKey||event.repeat||dialog.open||$('resetDialog').open||/INPUT|SELECT|TEXTAREA/.test(event.target.tagName)) return;
     if(event.key.toLowerCase()==='s'){event.preventDefault();openSettings();}
     if(event.key.toLowerCase()==='f'){event.preventDefault();fullScreen();}
