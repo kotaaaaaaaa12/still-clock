@@ -9,7 +9,12 @@
   const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,dateWeekday:true,dateMonth:true,dateDay:true,dateYear:false,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',hourPattern:'all',customHours:[12,3,6,9],numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
   const dateParts = {dateWeekday:['weekday','long'],dateMonth:['month','long'],dateDay:['day','numeric'],dateYear:['year','numeric']};
   const hourPatterns = {all:[12,1,2,3,4,5,6,7,8,9,10,11],quarters:[12,3,6,9],vertical:[12,6],horizontal:[3,9],top:[12],even:[12,2,4,6,8,10],odd:[1,3,5,7,9,11]};
-  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),motion:['sweep','tick'],markers:['numbers','roman','minimal'],hourPattern:['all','quarters','vertical','horizontal','top','even','odd','custom']};
+  const markerWords = {
+    roman:['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'],
+    kanji:['十二','一','二','三','四','五','六','七','八','九','十','十一'],
+    italian:['DCDICI','U','D','T','Q','C','S','S','O','N','D','U']
+  };
+  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),motion:['sweep','tick'],markers:['numbers','roman','kanji','arabicIndic','thai','binary','hex','italian','minimal'],hourPattern:['all','quarters','vertical','horizontal','top','even','odd','custom']};
   const storageKey = 'still-clock-settings-v1';
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
@@ -152,6 +157,13 @@
     for (const [key,value] of Object.entries(attributes)) el.setAttribute(key,String(value));
     return el;
   }
+  function markerText(hour) {
+    if (markerWords[settings.markers]) return markerWords[settings.markers][hour % 12];
+    if (settings.markers === 'binary') return hour.toString(2).padStart(4,'0');
+    if (settings.markers === 'hex') return hour.toString(16).toUpperCase();
+    const digits = settings.markers === 'arabicIndic' ? '٠١٢٣٤٥٦٧٨٩' : settings.markers === 'thai' ? '๐๑๒๓๔๕๖๗๘๙' : null;
+    return digits ? String(hour).replace(/\d/g,digit=>digits[Number(digit)]) : String(hour);
+  }
   function drawDial() {
     $('ticks').replaceChildren(); $('numbers').replaceChildren();
     for (let i=0;i<60;i++) {
@@ -160,16 +172,16 @@
       $('ticks').append(svgElement('line',{x1:200,y1:18,x2:200,y2:isHour?28:23,transform:`rotate(${i*6} 200 200)`,class:isHour?'tick hour':'tick'}));
     }
     if (settings.markers !== 'minimal') {
-      const roman = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
       const visible = settings.hourPattern === 'custom' ? settings.customHours : hourPatterns[settings.hourPattern];
       for (let i=0;i<12;i++) {
         if (!visible.includes(i===0?12:i)) continue;
         const angle = i*Math.PI/6;
         const x = 200+148*Math.sin(angle);
         const y = 200-148*Math.cos(angle);
-        const el = svgElement('text',{x,y,class:'dial-number'+(settings.markers==='roman'?' roman':'')});
+        const compact = ['binary','italian'].includes(settings.markers);
+        const el = svgElement('text',{x,y,class:'dial-number'+(settings.markers==='roman'?' roman':'')+(compact?' compact':''),direction:'ltr','unicode-bidi':'isolate'});
         if (settings.markers === 'roman') el.setAttribute('transform',`rotate(${i*30} ${x} ${y})`);
-        el.textContent = settings.markers==='roman'?roman[i]:(i===0?'12':String(i));
+        el.textContent = markerText(i===0?12:i);
         $('numbers').append(el);
       }
     }

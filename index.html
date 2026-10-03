@@ -7,9 +7,9 @@
   <meta name="description" content="A quiet clock, made yours. Customize analog and digital displays, typography, themes, and time zones.">
   <title>Still — Clock</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23191d20'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2f3f1' stroke-width='1.5'/%3E%3Cpath d='M16 9v7l5 3' fill='none' stroke='%23f2f3f1' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23cf553d'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=20">
-  <script src="i18n.js?v=20" defer></script>
-  <script src="app.js?v=20" defer></script>
+  <link rel="stylesheet" href="styles.css?v=22">
+  <script src="i18n.js?v=22" defer></script>
+  <script src="app.js?v=22" defer></script>
 </head>
 <body>
   <header class="topbar chrome">
@@ -81,7 +81,7 @@
       <section><h2>Analog clock</h2>
         <label class="toggle-row"><span>Second hand</span><input type="checkbox" id="analogSeconds" data-setting="analogSeconds"><span class="switch" aria-hidden="true"></span></label>
         <label class="field-label" for="motion">Second hand movement</label><select id="motion" data-setting="motion"><option value="sweep">Smooth sweep</option><option value="tick">One-second ticks</option></select>
-        <label class="field-label" for="markers">Hour markers</label><select id="markers" data-setting="markers"><option value="numbers">Numbers</option><option value="roman">Roman numerals</option><option value="minimal">Minimal</option></select>
+        <label class="field-label" for="markers">Hour markers</label><select id="markers" data-setting="markers"><option value="numbers">Numbers</option><option value="roman">Roman numerals</option><option value="kanji">Kanji numerals · 十二</option><option value="arabicIndic">Arabic-Indic numerals · ١٢</option><option value="thai">Thai numerals · ๑๒</option><option value="binary">Binary · 1100</option><option value="hex">Hexadecimal · C</option><option value="italian">Italian abbreviations · DCDICI</option><option value="minimal">Minimal</option></select>
         <label class="field-label" for="hourPattern">Visible numbers</label><select id="hourPattern" data-setting="hourPattern"><option value="all">All numbers</option><option value="quarters">12, 3, 6, 9</option><option value="vertical">12 and 6</option><option value="horizontal">3 and 9</option><option value="top">12 only</option><option value="even">Even numbers</option><option value="odd">Odd numbers</option><option value="custom">Choose numbers</option></select><div id="customHourPicker" class="hour-picker" hidden><span class="field-label" id="customHourLabel">Select visible numbers</span><div class="hour-grid" role="group" aria-labelledby="customHourLabel"><button type="button" data-hour="12" aria-pressed="false">12</button><button type="button" data-hour="1" aria-pressed="false">1</button><button type="button" data-hour="2" aria-pressed="false">2</button><button type="button" data-hour="3" aria-pressed="false">3</button><button type="button" data-hour="4" aria-pressed="false">4</button><button type="button" data-hour="5" aria-pressed="false">5</button><button type="button" data-hour="6" aria-pressed="false">6</button><button type="button" data-hour="7" aria-pressed="false">7</button><button type="button" data-hour="8" aria-pressed="false">8</button><button type="button" data-hour="9" aria-pressed="false">9</button><button type="button" data-hour="10" aria-pressed="false">10</button><button type="button" data-hour="11" aria-pressed="false">11</button></div></div>
         <div class="range-label"><label for="numeralSize">Numeral size</label><output id="numeralSizeValue" for="numeralSize">100%</output></div><input type="range" id="numeralSize" data-setting="numeralSize" min="50" max="250" step="5">
         <label class="toggle-row"><span>Minute marks</span><input type="checkbox" id="minuteMarks" data-setting="minuteMarks"><span class="switch" aria-hidden="true"></span></label>

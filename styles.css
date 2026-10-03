@@ -95,3 +95,5 @@ body{position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden;overscrol
 :root[data-input-method=pointer] .font-choice:has(input:focus-visible){outline:none}
 
 .digital-seconds .colon{color:var(--accent);color:color-mix(in srgb,var(--accent) 75%,var(--muted) 25%)}
+
+.dial-number.compact{font-size:calc(18px * var(--dial-scale));font-variant-numeric:tabular-nums}
