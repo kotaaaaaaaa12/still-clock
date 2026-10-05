@@ -111,7 +111,7 @@ body{position:relative;height:100dvh;min-height:0;overflow:hidden;overscroll-beh
 /* Hand previews use the same geometry and theme colors as the clock. */
 #hourHand,#minuteHand{color:var(--ink)}#secondHand{color:var(--accent)}
 .hand-picker summary,.hand-choice{font-family:var(--sans);font-size:15px}
-.hand-picker .hand-preview{display:block;width:124px;height:32px;color:var(--ink);fill:none;stroke:none;pointer-events:none}
+.hand-picker .hand-preview{display:block;overflow:visible;width:124px;height:32px;color:var(--ink);fill:none;stroke:none;pointer-events:none}
 .hand-picker summary .hand-preview{transform:none}
 .hand-picker[data-hand-kind=secondStyle] .hand-preview{color:var(--accent)}
 .preview-pivot{fill:currentColor;stroke:none}

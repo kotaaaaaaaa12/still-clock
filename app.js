@@ -1,9 +1,9 @@
 'use strict';
 (() => {
   const fontNames = {sans:'Modern sans',serif:'Classic serif',mono:'Monospace',rounded:'Rounded',lmroman:'LM Roman',slanted:'LM Roman Slanted',demi:'LM Roman Demi',lmsans:'LM Sans',condensed:'LM Sans Condensed',lmmono:'LM Mono',lightmono:'LM Mono Light',dunhill:'LM Dunhill'};
-  const handNames = {classic:'Classic',slim:'Slim',baton:'Baton',leaf:'Leaf',sword:'Sword',hollow:'Skeleton',ring:'Counterweight ring',needle:'Needle',arrow:'Arrow',diamond:'Diamond',tipRing:'Tip ring'};
-  const mainHandStyles = ['classic','slim','baton','leaf','sword','hollow'];
-  const secondHandStyles = ['ring','needle','arrow','diamond','tipRing'];
+  const handNames = {classic:'Classic',slim:'Slim',baton:'Baton',leaf:'Leaf',sword:'Sword',hollow:'Skeleton',dauphine:'Dauphine',cathedral:'Cathedral',spade:'Spade',syringe:'Syringe',rail:'Double rail',stepped:'Stepped',ring:'Counterweight ring',needle:'Needle',arrow:'Arrow',diamond:'Diamond',tipRing:'Tip ring',dot:'Dot',hollowDiamond:'Hollow diamond',doubleRing:'Double ring',lance:'Lance',square:'Square counterweight'};
+  const mainHandStyles = ['classic','slim','baton','leaf','sword','hollow','dauphine','cathedral','spade','syringe','rail','stepped'];
+  const secondHandStyles = ['ring','needle','arrow','diamond','tipRing','dot','hollowDiamond','doubleRing','lance','square'];
   const handKeys = ['hourStyle','minuteStyle','secondStyle'];
   const pickerKeys = ['theme','font','dialFont',...handKeys];
   const themeColors = {light:'#f2f3f1',dark:'#202224',midnight:'#101b2b',paper:'#eee7d8',black:'#050505',forest:'#142b23',plum:'#292035',ocean:'#e2f1f6',rose:'#f5e7ed',terminal:'#08100b',white:'#ffffff',lemon:'#ffe34d',tangerine:'#ffac35',bubblegum:'#ff8ac2',pool:'#39d5ed',lime:'#b6ee45',cobalt:'#76b7ff',coral:'#ff7666',"mint":"#d9efe5","lavender":"#e8e0f5","peach":"#f7e0d0","sky":"#dce9f7","butter":"#f4edc9","cloud":"#e8eaf0","slate":"#252d38","navy":"#121a36","burgundy":"#341c29","espresso":"#28211d","charcoal":"#17191c","deepteal":"#102e32"};
@@ -172,6 +172,11 @@
       if (style === 'arrow') return [path('M200 229V58',true),path('M200 43L194 60L200 57L206 60Z')];
       if (style === 'diamond') return [path('M200 229V69M200 49V43',true),path('M200 49L195 59L200 69L205 59Z')];
       if (style === 'tipRing') return [path('M200 229V58',true),ring(52,6)];
+      if (style === 'dot') return [path('M200 229V56',true),svgElement('circle',{cx:200,cy:51,r:4,fill:'currentColor'})];
+      if (style === 'hollowDiamond') return [path('M200 229V65M200 47V43',true),path('M200 47L194 56L200 65L206 56Z',true)];
+      if (style === 'doubleRing') return [path('M200 237V234M200 222V218M200 210V45',true),ring(228,6),ring(214,4)];
+      if (style === 'lance') return [path('M200 229V88',true),path('M200 43L197 75L200 89L203 75Z')];
+      if (style === 'square') return [path('M200 237V230M200 220V45',true),path('M195 220H205V230H195Z',true)];
       return [path('M200 229V45',true)];
     }
     const hour = key === 'hourStyle', tip = hour?108:63, tail = hour?213:218;
@@ -180,6 +185,15 @@
     if (style === 'leaf') return [path(`M200 ${tip}C${hour?181:187} ${tip+33} 195 183 197 ${tail}H203C205 183 ${hour?219:213} ${tip+33} 200 ${tip}Z`)];
     if (style === 'sword') return [path(`M200 ${tip}L${hour?191:194} ${tip+38}L197 ${tail}H203L${hour?209:206} ${tip+38}Z`)];
     if (style === 'hollow') return [path(`M200 ${tip}L${hour?193:195} ${tip+22}L197 ${tail}H203L${hour?207:205} ${tip+22}Z`,true,1.8)];
+    if (style === 'dauphine') return [path(`M200 ${tip}L${hour?190:193} ${tip+50}L200 ${tail}L${hour?210:207} ${tip+50}Z`)];
+    if (style === 'cathedral') {
+      const shoulder = tip+24, chamber = tip+52, half = hour?8:6;
+      return [path(`M200 ${tip}L${200-half} ${shoulder}V${chamber}L197 ${tail}H203L${200+half} ${chamber}V${shoulder}Z`,true,1.8),path(`M${200-half} ${shoulder}H${200+half}M${200-half} ${chamber}H${200+half}M200 ${shoulder}V${chamber}`,true,1.2)];
+    }
+    if (style === 'spade') return [path(`M200 ${tail}V${tip+37}`,true,hour?4:3),path(`M200 ${tip}C198 ${tip+11} ${hour?185:190} ${tip+18} ${hour?190:193} ${tip+30}Q200 ${tip+39} ${hour?210:207} ${tip+30}C${hour?215:210} ${tip+18} 202 ${tip+11} 200 ${tip}Z`)];
+    if (style === 'syringe') return [path(`M200 ${tip}V${tip+30}`,true,1.8),svgElement('rect',{x:hour?196:197,y:tip+30,width:hour?8:6,height:tail-tip-30,rx:1,fill:'currentColor'})];
+    if (style === 'rail') return [path(`M197 ${tail}V${tip+10}L200 ${tip}L203 ${tip+10}V${tail}M197 ${tip+25}H203`,true,1.6)];
+    if (style === 'stepped') return [path(`M200 ${tip}L197 ${tip+12}V${tip+45}H${hour?193:195}V${tail}H${hour?207:205}V${tip+45}H203V${tip+12}Z`)];
     return [path(hour?'M194 213L196 111Q200 105 204 111L206 213Z':'M197 218L198 65Q200 61 202 65L203 218Z')];
   }
   function syncHandPickers() {
