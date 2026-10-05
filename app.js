@@ -1,12 +1,17 @@
 'use strict';
 (() => {
   const fontNames = {sans:'Modern sans',serif:'Classic serif',mono:'Monospace',rounded:'Rounded',lmroman:'LM Roman',slanted:'LM Roman Slanted',demi:'LM Roman Demi',lmsans:'LM Sans',condensed:'LM Sans Condensed',lmmono:'LM Mono',lightmono:'LM Mono Light',dunhill:'LM Dunhill'};
+  const handNames = {classic:'Classic',slim:'Slim',baton:'Baton',leaf:'Leaf',sword:'Sword',hollow:'Skeleton',ring:'Counterweight ring',needle:'Needle',arrow:'Arrow',diamond:'Diamond',tipRing:'Tip ring'};
+  const mainHandStyles = ['classic','slim','baton','leaf','sword','hollow'];
+  const secondHandStyles = ['ring','needle','arrow','diamond','tipRing'];
+  const handKeys = ['hourStyle','minuteStyle','secondStyle'];
+  const pickerKeys = ['theme','font','dialFont',...handKeys];
   const themeColors = {light:'#f2f3f1',dark:'#202224',midnight:'#101b2b',paper:'#eee7d8',black:'#050505',forest:'#142b23',plum:'#292035',ocean:'#e2f1f6',rose:'#f5e7ed',terminal:'#08100b',white:'#ffffff',lemon:'#ffe34d',tangerine:'#ffac35',bubblegum:'#ff8ac2',pool:'#39d5ed',lime:'#b6ee45',cobalt:'#76b7ff',coral:'#ff7666',"mint":"#d9efe5","lavender":"#e8e0f5","peach":"#f7e0d0","sky":"#dce9f7","butter":"#f4edc9","cloud":"#e8eaf0","slate":"#252d38","navy":"#121a36","burgundy":"#341c29","espresso":"#28211d","charcoal":"#17191c","deepteal":"#102e32"};
   const themeNames = {auto:'Match device',light:'Light',dark:'Dark',midnight:'Midnight',paper:'Paper',black:'Black',forest:'Forest',plum:'Plum',ocean:'Ocean',rose:'Rose',terminal:'Terminal',white:'White',lemon:'Lemon',tangerine:'Tangerine',bubblegum:'Bubblegum',pool:'Pool',lime:'Lime',cobalt:'Cobalt',coral:'Coral',custom:'Custom',"mint":"Mint","lavender":"Lavender","peach":"Peach","sky":"Sky","butter":"Butter","cloud":"Cloud","slate":"Slate","navy":"Navy","burgundy":"Burgundy","espresso":"Espresso","charcoal":"Charcoal","deepteal":"Deep teal"};
   const themePreviews = {light:['#f2f3f1','#25282a','#f8f9f6'],dark:['#202224','#eeefeb','#25292a'],midnight:['#101b2b','#dce8f6','#152235'],paper:['#eee7d8','#493f30','#f5f0e5'],black:['#050505','#f4f4f4','#0d0d0d'],forest:['#142b23','#d6efe1','#1b332a'],plum:['#292035','#eadef3','#30263b'],ocean:['#e2f1f6','#1e4a60','#edf7fa'],rose:['#f5e7ed','#543748','#fcf1f6'],terminal:['#08100b','#88dd99','#0d1a12'],white:['#ffffff','#202326','#ffffff'],lemon:['#ffe34d','#382d08','#fff4b8'],tangerine:['#ffac35','#422408','#ffe5bf'],bubblegum:['#ff8ac2','#4c1833','#ffe0ef'],pool:['#39d5ed','#053e4f','#d1f7fc'],lime:['#b6ee45','#293b0c','#e9facb'],cobalt:['#76b7ff','#102c57','#dfedff'],coral:['#ff7666','#481910','#ffded8'],"mint":["#d9efe5", "#254a3b", "#edf9f2"],"lavender":["#e8e0f5", "#49355c", "#f7f2fc"],"peach":["#f7e0d0", "#603c2b", "#fff2e9"],"sky":["#dce9f7", "#2c465e", "#f0f6fd"],"butter":["#f4edc9", "#514922", "#fffae5"],"cloud":["#e8eaf0", "#3c4254", "#f6f7fb"],"slate":["#252d38", "#e6edf5", "#2e3845"],"navy":["#121a36", "#e4e9ff", "#1b264a"],"burgundy":["#341c29", "#f8e2ea", "#432535"],"espresso":["#28211d", "#efe4d6", "#352c25"],"charcoal":["#17191c", "#edf0f4", "#23262b"],"deepteal":["#102e32", "#dcf3ef", "#183e42"]};
   const colorSettings = ['accent','customBg','customInk','customDial','customSurface'];
   const customTokens = ['bg','ink','dial','surface','muted','line','subtle','shadow'];
-  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,dateWeekday:true,dateMonth:true,dateDay:true,dateYear:false,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',analogSeconds:true,motion:'sweep',markers:'numbers',hourPattern:'all',customHours:[12,3,6,9],numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
+  const defaults = {language:'auto',mode:'both',format:'24',layout:'stacked',timezone:'local',date:true,dateWeekday:true,dateMonth:true,dateDay:true,dateYear:false,zone:true,scale:100,theme:'light',customBg:'#f2f3f1',customInk:'#25282a',customDial:'#f8f9f6',customSurface:'#fcfdfb',font:'sans',dialFont:'serif',accent:'#cf553d',hourStyle:'classic',minuteStyle:'classic',secondStyle:'ring',analogSeconds:true,motion:'sweep',markers:'numbers',hourPattern:'all',customHours:[12,3,6,9],numeralSize:100,minuteMarks:true,digitalSeconds:true,blink:false,leadingZero:true};
   const dateParts = {dateWeekday:['weekday','long'],dateMonth:['month','long'],dateDay:['day','numeric'],dateYear:['year','numeric']};
   const hourPatterns = {all:[12,1,2,3,4,5,6,7,8,9,10,11],quarters:[12,3,6,9],vertical:[12,6],horizontal:[3,9],top:[12],even:[12,2,4,6,8,10],odd:[1,3,5,7,9,11]};
   const markerWords = {
@@ -14,7 +19,7 @@
     kanji:['十二','一','二','三','四','五','六','七','八','九','十','十一'],
     italian:['DCDICI','U','D','T','Q','C','S','S','O','N','D','U']
   };
-  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),motion:['sweep','tick'],markers:['numbers','roman','kanji','arabicIndic','thai','binary','hex','italian','minimal'],hourPattern:['all','quarters','vertical','horizontal','top','even','odd','custom']};
+  const choices = {language:['auto','ja','en'],mode:['both','analog','digital'],format:['24','12'],layout:['stacked','side'],theme:['auto',...Object.keys(themeColors),'custom'],font:Object.keys(fontNames),dialFont:Object.keys(fontNames),hourStyle:mainHandStyles,minuteStyle:mainHandStyles,secondStyle:secondHandStyles,motion:['sweep','tick'],markers:['numbers','roman','kanji','arabicIndic','thai','binary','hex','italian','minimal'],hourPattern:['all','quarters','vertical','horizontal','top','even','odd','custom']};
   const storageKey = 'still-clock-settings-v1';
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
@@ -159,6 +164,39 @@
     for (const [key,value] of Object.entries(attributes)) el.setAttribute(key,String(value));
     return el;
   }
+  function handShapes(key,style) {
+    const path = (d,outline=false,width=1.4) => svgElement('path',{d,fill:outline?'none':'currentColor',stroke:outline?'currentColor':'none','stroke-width':width,'stroke-linecap':'round','stroke-linejoin':'round'});
+    const ring = (y,r=5) => svgElement('circle',{cx:200,cy:y,r,fill:'none',stroke:'currentColor','stroke-width':1.4});
+    if (key === 'secondStyle') {
+      if (style === 'ring') return [path('M200 231V230M200 220V45',true),ring(225)];
+      if (style === 'arrow') return [path('M200 229V58',true),path('M200 43L194 60L200 57L206 60Z')];
+      if (style === 'diamond') return [path('M200 229V69M200 49V43',true),path('M200 49L195 59L200 69L205 59Z')];
+      if (style === 'tipRing') return [path('M200 229V58',true),ring(52,6)];
+      return [path('M200 229V45',true)];
+    }
+    const hour = key === 'hourStyle', tip = hour?108:63, tail = hour?213:218;
+    if (style === 'slim') return [path(`M200 ${tail}V${tip}`,true,hour?3:2)];
+    if (style === 'baton') return [svgElement('rect',{x:hour?196:197,y:tip,width:hour?8:6,height:tail-tip,rx:1,fill:'currentColor'})];
+    if (style === 'leaf') return [path(`M200 ${tip}C${hour?181:187} ${tip+33} 195 183 197 ${tail}H203C205 183 ${hour?219:213} ${tip+33} 200 ${tip}Z`)];
+    if (style === 'sword') return [path(`M200 ${tip}L${hour?191:194} ${tip+38}L197 ${tail}H203L${hour?209:206} ${tip+38}Z`)];
+    if (style === 'hollow') return [path(`M200 ${tip}L${hour?193:195} ${tip+22}L197 ${tail}H203L${hour?207:205} ${tip+22}Z`,true,1.8)];
+    return [path(hour?'M194 213L196 111Q200 105 204 111L206 213Z':'M197 218L198 65Q200 61 202 65L203 218Z')];
+  }
+  function syncHandPickers() {
+    for (const key of handKeys) {
+      $(key+'Name').textContent = t(handNames[settings[key]]);
+      $(key+'Preview').replaceChildren(...handShapes(key,settings[key]));
+      const hand = $(key.replace('Style','Hand'));
+      // Replacing the shapes preserves the animated rotation on the hand group.
+      hand.replaceChildren(...handShapes(key,settings[key]));
+    }
+    document.querySelectorAll('input[data-hand-choice]').forEach(el => {
+      el.checked = settings[el.dataset.handChoice] === el.value;
+    });
+  }
+  document.querySelectorAll('[data-hand-preview]').forEach(el => {
+    el.replaceChildren(...handShapes(el.dataset.handPreview,el.dataset.handStyle));
+  });
   function markerText(hour) {
     if (markerWords[settings.markers]) return markerWords[settings.markers][hour % 12];
     if (settings.markers === 'binary') return hour.toString(2).padStart(4,'0');
@@ -288,6 +326,7 @@
     modeButtons.forEach(el => el.setAttribute('aria-pressed',String(el.dataset.mode===settings.mode)));
     document.querySelectorAll('[data-accent]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.accent.toLowerCase()===settings.accent.toLowerCase())));
     syncFontPickers();
+    syncHandPickers();
     syncThemePicker();
     document.querySelector('meta[name="theme-color"]').content = settings.theme === 'custom' ? settings.customBg : themeColors[root.dataset.theme];
     formatters(); drawDial(); tick();
@@ -446,9 +485,17 @@
     $(key+'Summary').focus({preventScroll:true});
     schedule();
   }));
-  for (const key of ['theme','font','dialFont']) {
+  document.querySelectorAll('input[data-hand-choice]').forEach(el => el.addEventListener('change',() => {
+    if (!el.checked) return;
+    const key = el.dataset.handChoice;
+    updateSettings({[key]:el.value});
+    $(key+'Picker').open = false;
+    $(key+'Summary').focus({preventScroll:true});
+    schedule();
+  }));
+  for (const key of pickerKeys) {
     $(key+'Picker').addEventListener('toggle',() => {
-      if ($(key+'Picker').open) for (const other of ['theme','font','dialFont']) if (other !== key) $(other+'Picker').open = false;
+      if ($(key+'Picker').open) for (const other of pickerKeys) if (other !== key) $(other+'Picker').open = false;
     });
     $(key+'Picker').addEventListener('keydown',event => {
       if (event.key === 'Escape' && $(key+'Picker').open) {
