@@ -18,6 +18,7 @@
   const storageKey = 'still-clock-settings-v1';
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
+  const modeButtons = document.querySelectorAll('.mode-control button[data-mode]');
   root.dataset.inputMethod = 'pointer';
   const dialog = $('settingsDialog');
   const zoneOptions = [...$('timezone').options].filter(option => {
@@ -36,6 +37,7 @@
   let focus = false;
   let idleTimer, toastTimer;
   let layoutFrame;
+  let clockFit = 1;
   let timer;
   let locale = 'en';
   const translations = window.StillLocale.ja;
@@ -188,25 +190,26 @@
     fitDialNumbers();
   }
   function fitDialNumbers() {
+    if (settings.mode === 'digital') return;
     for (const el of $('numbers').children) {
       el.removeAttribute('dx');
       el.removeAttribute('dy');
       el.removeAttribute('textLength');
       el.removeAttribute('lengthAdjust');
-      const maxWidth = settings.markers === 'roman' ? 68 : 72;
-      if (typeof el.getComputedTextLength === 'function' && el.getComputedTextLength() > maxWidth) {
-        el.setAttribute('textLength',String(maxWidth));
-        el.setAttribute('lengthAdjust','spacingAndGlyphs');
-      }
-      // Center the measured text bounds at the marker's original dial position.
-      if (typeof el.getBBox !== 'function') continue;
       try {
+        const maxWidth = settings.markers === 'roman' ? 68 : 72;
+        if (typeof el.getComputedTextLength === 'function' && el.getComputedTextLength() > maxWidth) {
+          el.setAttribute('textLength',String(maxWidth));
+          el.setAttribute('lengthAdjust','spacingAndGlyphs');
+        }
+        // Center the measured text bounds at the marker's original dial position.
+        if (typeof el.getBBox !== 'function') continue;
         const box = el.getBBox();
         if (box.width <= 0 || box.height <= 0 || ![box.x,box.y,box.width,box.height].every(Number.isFinite)) continue;
         el.setAttribute('dx',String(Number(el.getAttribute('x')) - box.x - box.width / 2));
         el.setAttribute('dy',String(Number(el.getAttribute('y')) - box.y - box.height / 2));
       } catch (_) {
-        // Hidden SVG text may not have measurable bounds yet.
+        // Unavailable SVG metrics must not interrupt display-mode changes.
       }
     }
   }
@@ -282,7 +285,7 @@
       const value = settings[el.dataset.setting];
       if (el.type === 'checkbox') el.checked = value; else el.value = value;
     });
-    document.querySelectorAll('[data-mode]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.mode===settings.mode)));
+    modeButtons.forEach(el => el.setAttribute('aria-pressed',String(el.dataset.mode===settings.mode)));
     document.querySelectorAll('[data-accent]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.accent.toLowerCase()===settings.accent.toLowerCase())));
     syncFontPickers();
     syncThemePicker();
@@ -303,11 +306,12 @@
     const dateSpace = $('dateLine').hidden ? 0 : $('dateLine').offsetHeight + px(getComputedStyle($('dateLine')).marginBottom);
     const width = Math.max(0,main.clientWidth - px(style.paddingLeft) - px(style.paddingRight) - 1);
     const height = Math.max(0,main.clientHeight - px(style.paddingTop) - px(style.paddingBottom) - dateSpace - 1);
-    root.style.setProperty('--clock-fit','1');
-    const analog = settings.mode === 'digital' ? 0 : $('analogWrap').getBoundingClientRect().width;
+    if (!width || !height) return;
+    // Read the natural size without temporarily enlarging the visible clocks.
+    const analog = settings.mode === 'digital' ? 0 : $('analogWrap').getBoundingClientRect().width / clockFit;
     const digits = $('digitalTime').getBoundingClientRect();
-    const digitalWidth = settings.mode === 'analog' ? 0 : digits.width;
-    const digitalHeight = settings.mode === 'analog' ? 0 : digits.height;
+    const digitalWidth = settings.mode === 'analog' ? 0 : digits.width / clockFit;
+    const digitalHeight = settings.mode === 'analog' ? 0 : digits.height / clockFit;
     if (!analog && !digitalWidth) return;
     const pairStyle = getComputedStyle(pair);
     const side = pairStyle.flexDirection === 'row';
@@ -329,10 +333,15 @@
     }
     // Reserve enough room for a modest enlargement above the default size.
     const sizeFraction = settings.scale / 130;
-    root.style.setProperty('--clock-fit',String(low * sizeFraction));
+    const nextFit = Math.max(.0001,low * sizeFraction);
+    if (Math.abs(nextFit - clockFit) > .00001) {
+      clockFit = nextFit;
+      root.style.setProperty('--clock-fit',String(clockFit));
+    }
     const fitted = pair.getBoundingClientRect();
-    stage.style.width = fitted.width+'px';
-    stage.style.height = fitted.height+'px';
+    const stageWidth = fitted.width+'px', stageHeight = fitted.height+'px';
+    if (stage.style.width !== stageWidth) stage.style.width = stageWidth;
+    if (stage.style.height !== stageHeight) stage.style.height = stageHeight;
   }
   function scheduleLayout() {
     if (layoutFrame) return;
@@ -415,7 +424,7 @@
     const value = el.type==='checkbox'?el.checked:el.type==='range'?Number(el.value):el.value;
     updateSettings({[el.dataset.setting]:value}); schedule();
   }));
-  document.querySelectorAll('[data-mode]').forEach(el=>el.addEventListener('click',()=>{updateSettings({mode:el.dataset.mode});schedule();}));
+  modeButtons.forEach(el=>el.addEventListener('click',()=>{updateSettings({mode:el.dataset.mode});schedule();}));
   document.querySelectorAll('input[data-theme-choice]').forEach(el=>el.addEventListener('change',()=>{
     if (!el.checked) return;
     updateSettings({theme:el.value});

@@ -84,7 +84,7 @@ body.focus-mode #clockMain{--fullscreen-inset:max(12px,env(safe-area-inset-top,0
 
 /* Keep the clock on one screen; only settings content scrolls. */
 html{height:100%;overflow:hidden;overscroll-behavior:none}
-body{position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:none}
+body{position:relative;height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:none}
 #clockMain{min-width:0;min-height:0}
 .date-line,.bottom-bar{flex-shrink:0}
 #settingsDialog{overflow:hidden}
@@ -97,3 +97,13 @@ body{position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden;overscrol
 .digital-seconds .colon{color:var(--accent);color:color-mix(in srgb,var(--accent) 75%,var(--muted) 25%)}
 
 .dial-number.compact{font-size:calc(18px * var(--dial-scale));font-variant-numeric:tabular-nums}
+
+/* Decorative clocks must never intercept the display controls. */
+.clock-stage{pointer-events:none}
+.bottom-bar{position:relative;z-index:2}
+
+/* Keep clock layout in normal flow and contain it within its own screen area. */
+#clockMain{position:relative;overflow:hidden;pointer-events:none}
+#clockStage{display:grid;place-items:center}
+#clockPair{position:static;left:auto;top:auto;transform:none}
+.topbar,.bottom-bar{position:relative;z-index:2;pointer-events:auto}
