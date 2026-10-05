@@ -443,6 +443,63 @@
     title.focus({preventScroll:true});
   }
   function openSettings() { openDialog(dialog,$('settingsTitle')); }
+  function shareStatus(message,error=false) {
+    $('shareStatus').textContent = t(message);
+    $('shareStatus').classList.toggle('is-error',error);
+  }
+  function refreshSharedClock() {
+    const code = window.StillShare.encode(settings);
+    const url = window.StillShare.makeURL(code,window.location.href);
+    $('clockCode').value = code;
+    $('clockURL').value = url;
+    $('copyClockURL').disabled = !url;
+    $('shareClockURL').hidden = !navigator.share || !url;
+    $('offlineShareHint').hidden = Boolean(url);
+    $('qrCaption').textContent = t(url?'Scan to open this clock.':'Scan to copy this clock code.');
+    try {
+      window.StillShare.drawQR($('clockQR'),url || code);
+      $('clockQR').hidden = false;
+      $('saveClockQR').disabled = false;
+    } catch (_) {
+      $('clockQR').hidden = true;
+      $('saveClockQR').disabled = true;
+      shareStatus('The QR image could not be created. You can still copy the clock code.',true);
+    }
+  }
+  function openShare() {
+    $('importClockCode').value = '';
+    $('importClockCode').removeAttribute('aria-invalid');
+    shareStatus('');refreshSharedClock();
+    openDialog($('shareDialog'),$('shareTitle'));
+  }
+  async function copyClock(id) {
+    const field = $(id);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard is unavailable.');
+      await navigator.clipboard.writeText(field.value);
+      shareStatus('Copied.');
+    } catch (_) {
+      field.focus({preventScroll:true});field.select();
+      shareStatus('Select and copy the highlighted text.',true);
+    }
+  }
+  function importClock(code) {
+    // Validate the entire payload before changing or saving any settings.
+    const imported = validate(window.StillShare.decode(code));
+    updateSettings(imported);schedule();
+  }
+  function loadSharedClock() {
+    const url = new URL(window.location.href);
+    const fragment = new URLSearchParams(url.hash.slice(1));
+    const code = fragment.get('clock');
+    if (code === null) return;
+    try {
+      importClock(code);
+      fragment.delete('clock');url.hash=fragment.toString();
+      try { window.history.replaceState(null,'',url.href); } catch (_) {}
+      toast(t('Shared clock loaded.'));
+    } catch (_) { toast(t('This clock code is invalid or uses an unsupported version.')); }
+  }
   function revealFocus() {
     if (!focus) return;
     $('exitFocus').classList.remove('is-idle');
@@ -520,6 +577,37 @@
     });
   }
   $('settingsButton').addEventListener('click',openSettings);
+  $('openShare').addEventListener('click',openShare);
+  $('closeShare').addEventListener('click',()=>$('shareDialog').close());
+  $('copyClockCode').addEventListener('click',()=>copyClock('clockCode'));
+  $('copyClockURL').addEventListener('click',()=>copyClock('clockURL'));
+  $('shareClockURL').addEventListener('click',async()=>{
+    try { await navigator.share({title:t('Still — Clock'),url:$('clockURL').value}); }
+    catch (error) { if(error.name!=='AbortError')shareStatus('Sharing is unavailable. Copy the link instead.',true); }
+  });
+  $('importClock').addEventListener('click',()=>{
+    try {
+      importClock($('importClockCode').value);
+      refreshSharedClock();
+      $('importClockCode').removeAttribute('aria-invalid');
+      shareStatus('Clock imported.');
+    } catch (_) {
+      $('importClockCode').setAttribute('aria-invalid','true');
+      shareStatus('This clock code is invalid or uses an unsupported version.',true);
+    }
+  });
+  $('importClockCode').addEventListener('input',()=>{
+    $('importClockCode').removeAttribute('aria-invalid');shareStatus('');
+  });
+  $('saveClockQR').addEventListener('click',()=>{
+    $('clockQR').toBlob(blob=>{
+      if(!blob){shareStatus('The QR image could not be saved.',true);return;}
+      const url=URL.createObjectURL(blob), link=document.createElement('a');
+      link.href=url;link.download='still-clock-qr.png';document.body.append(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+      shareStatus('QR image ready to save.');
+    },'image/png');
+  });
   document.querySelectorAll('[data-hour]').forEach(el=>el.addEventListener('click',()=>{
     const hour = Number(el.dataset.hour);
     const customHours = settings.customHours.includes(hour) ? settings.customHours.filter(value=>value!==hour) : [...settings.customHours,hour].sort((a,b)=>a-b);
@@ -541,8 +629,8 @@
   document.addEventListener('keydown',event=>{
     if (event.key === 'Tab' || event.key.startsWith('Arrow')) root.dataset.inputMethod='keyboard';
     revealFocus();
-    if (event.key === 'Escape' && focus && !document.fullscreenElement && !dialog.open && !$('resetDialog').open) setFocus(false);
-    if (event.ctrlKey||event.metaKey||event.altKey||event.repeat||dialog.open||$('resetDialog').open||/INPUT|SELECT|TEXTAREA/.test(event.target.tagName)) return;
+    if (event.key === 'Escape' && focus && !document.fullscreenElement && !dialog.open && !$('resetDialog').open && !$('shareDialog').open) setFocus(false);
+    if (event.ctrlKey||event.metaKey||event.altKey||event.repeat||dialog.open||$('resetDialog').open||$('shareDialog').open||/INPUT|SELECT|TEXTAREA/.test(event.target.tagName)) return;
     if(event.key.toLowerCase()==='s'){event.preventDefault();openSettings();}
     if(event.key.toLowerCase()==='f'){event.preventDefault();fullScreen();}
   });
@@ -558,6 +646,8 @@
   }
   window.addEventListener('storage',event=>{if(event.key===storageKey){try{settings=event.newValue?settingsFromStorage(event.newValue):{...defaults};applySettings();schedule();}catch(_){}}});
   applySettings(); schedule();
+  loadSharedClock();
+  window.addEventListener('hashchange',loadSharedClock);
   if (document.fonts) {
     const fontsReady = () => { fitDialNumbers(); scheduleLayout(); };
     document.fonts.ready.then(fontsReady).catch(()=>{});

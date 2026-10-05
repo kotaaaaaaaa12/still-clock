@@ -7,9 +7,11 @@
   <meta name="description" content="A quiet clock, made yours. Customize analog and digital displays, typography, themes, and time zones.">
   <title>Still — Clock</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23191d20'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2f3f1' stroke-width='1.5'/%3E%3Cpath d='M16 9v7l5 3' fill='none' stroke='%23f2f3f1' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23cf553d'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=26">
-  <script src="i18n.js?v=26" defer></script>
-  <script src="app.js?v=26" defer></script>
+  <link rel="stylesheet" href="styles.css?v=27">
+  <script src="i18n.js?v=27" defer></script>
+  <script src="vendor/qrcode.js?v=27" defer></script>
+  <script src="share.js?v=27" defer></script>
+  <script src="app.js?v=27" defer></script>
 </head>
 <body>
   <header class="topbar chrome">
@@ -95,8 +97,24 @@
         <label class="toggle-row"><span>Leading zero</span><input type="checkbox" id="leadingZero" data-setting="leadingZero"><span class="switch" aria-hidden="true"></span></label>
       </section>
     </div>
+    <section class="share-entry"><button type="button" id="openShare">Export / Import</button></section>
     <div class="settings-footer"><span id="saveStatus" role="status">Changes save automatically</span><button id="resetButton">Reset settings</button></div>
   </dialog>
   <dialog id="resetDialog" class="confirm-dialog" aria-labelledby="resetTitle"><h2 id="resetTitle" tabindex="-1" autofocus>Reset your clock?</h2><p>Restore the original display and appearance settings.</p><div class="confirm-actions"><button id="cancelReset">Cancel</button><button id="confirmReset" class="primary-button">Reset settings</button></div></dialog>
+  <dialog id="shareDialog" class="share-dialog" aria-labelledby="shareTitle">
+    <div class="settings-header"><h1 id="shareTitle" tabindex="-1" autofocus>Share & restore</h1><button type="button" id="closeShare" class="icon-button" aria-label="Close sharing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="settings-content share-content">
+      <section><h2>Export this clock</h2>
+        <label class="field-label" for="clockCode">Clock code</label><textarea id="clockCode" class="share-text" rows="3" readonly spellcheck="false" aria-describedby="clockCodeHint"></textarea><p class="share-hint" id="clockCodeHint">Copy this code to restore all your settings on another device.</p>
+        <button type="button" id="copyClockCode" class="share-action">Copy code</button>
+        <label class="field-label" for="clockURL">Share link</label><textarea id="clockURL" class="share-text" rows="3" readonly spellcheck="false"></textarea>
+        <div class="share-actions"><button type="button" id="copyClockURL" class="share-action">Copy link</button><button type="button" id="shareClockURL" class="share-action" hidden>Share link</button></div>
+        <p class="share-hint" id="offlineShareHint" hidden>A share link is available when this page is hosted online.</p>
+        <div class="qr-card"><canvas id="clockQR" role="img" aria-label="QR code for this clock"></canvas><p class="share-hint" id="qrCaption">Scan to open this clock.</p><button type="button" id="saveClockQR" class="share-action">Save QR image</button></div>
+      </section>
+      <section><h2>Import a clock</h2><label class="field-label" for="importClockCode">Clock code or share link</label><textarea id="importClockCode" class="share-text" rows="4" maxlength="12000" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="shareStatus"></textarea><button type="button" id="importClock" class="share-action primary-button">Import clock</button></section>
+    </div>
+    <div id="shareStatus" class="share-status" role="status" aria-live="polite"></div>
+  </dialog>
 </body>
 </html>

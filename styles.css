@@ -116,3 +116,11 @@ body{position:relative;height:100dvh;min-height:0;overflow:hidden;overscroll-beh
 .hand-picker[data-hand-kind=secondStyle] .hand-preview{color:var(--accent)}
 .preview-pivot{fill:currentColor;stroke:none}
 @media(max-width:380px){.hand-picker .hand-preview{width:94px;height:30px}.hand-picker summary{gap:8px}.hand-choice{gap:8px}}
+
+/* Sharing uses an independent dialog so settings stay open underneath. */
+.share-entry{padding:16px 30px 0;flex-shrink:0}.share-entry button{width:100%;min-height:43px;font-size:14px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--subtle)}
+.share-dialog{width:min(490px,100%)}.share-dialog h1{font-size:26px;margin:0;letter-spacing:-.035em}
+.share-text{display:block;width:100%;resize:vertical;min-height:80px;max-height:180px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.5;overflow-wrap:anywhere;word-break:break-all}
+.share-text:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.share-text[aria-invalid=true]{border-color:var(--accent)}
+.share-hint{font-size:14px;line-height:1.5;color:var(--muted);margin:9px 0 14px}.share-action{min-height:43px;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:14px;line-height:1.5}.share-action:hover{background:var(--subtle)}.share-action:disabled{opacity:.45;cursor:default}.share-action.primary-button{margin-top:14px;background:var(--ink);color:var(--bg)}.share-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.qr-card{display:flex;flex-direction:column;align-items:center;margin-top:24px;gap:8px}.qr-card canvas{display:block;width:min(260px,100%);height:auto;aspect-ratio:1;background:#fff;border-radius:4px}.qr-card .share-hint{margin:0;text-align:center}.share-status{padding:14px 30px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);font-size:14px;line-height:1.5;min-height:54px;flex-shrink:0;color:var(--muted)}.share-status.is-error{color:var(--ink)}
+@media(max-width:520px){.share-entry{padding:14px 24px 0}.share-status{padding-left:24px;padding-right:24px}}
